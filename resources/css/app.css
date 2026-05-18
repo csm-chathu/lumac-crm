@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        @apply bg-gray-50 text-gray-900 font-sans;
+        overscroll-behavior-y: none;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply bg-primary-600 text-white px-4 md:px-5 py-3 md:py-3.5 rounded-xl font-semibold text-sm md:text-base active:bg-primary-700 hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full;
+    }
+
+    .btn-secondary {
+        @apply bg-gray-100 text-gray-700 px-4 md:px-5 py-3 md:py-3.5 rounded-xl font-semibold text-sm md:text-base active:bg-gray-200 hover:bg-gray-200 transition-colors w-full;
+    }
+
+    .input-field {
+        @apply w-full bg-white border border-gray-200 rounded-xl px-4 md:px-5 py-3 md:py-3.5 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    }
+
+    .card {
+        @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6;
+    }
+
+    .tab-active {
+        @apply text-primary-600 border-b-2 border-primary-600;
+    }
+
+    .tab-inactive {
+        @apply text-gray-400;
+    }
+}
+
+/* Responsive utilities */
+@layer utilities {
+    .responsive-container {
+        @apply max-w-7xl mx-auto px-4 md:px-6 lg:px-8;
+    }
+}
