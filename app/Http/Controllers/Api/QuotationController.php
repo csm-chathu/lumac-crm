@@ -64,6 +64,7 @@ class QuotationController extends Controller
             ]);
 
             $subtotal = 0;
+            $commissionableSubtotal = 0;
             foreach ($data['items'] as $item) {
                 $solution = isset($item['solution_id']) ? Solution::query()->find($item['solution_id']) : null;
                 $itemName = $item['item_name'] ?? $solution?->name ?? 'Custom Item';
@@ -75,6 +76,11 @@ class QuotationController extends Controller
                 $lineTotal = $unitPrice * $item['quantity'];
                 $subtotal += $lineTotal;
 
+                // Commission applies only to solution items, not custom/device lines.
+                if ($solution) {
+                    $commissionableSubtotal += $lineTotal;
+                }
+
                 $quote->items()->create([
                     'solution_id' => $solution?->id,
                     'item_name' => $itemName,
@@ -85,7 +91,8 @@ class QuotationController extends Controller
             }
 
             $finalTotal = $subtotal * (1 - ($discountRate / 100));
-            $commissionAmount = $finalTotal * ($commissionRate / 100);
+            $commissionableTotal = $commissionableSubtotal * (1 - ($discountRate / 100));
+            $commissionAmount = $commissionableTotal * ($commissionRate / 100);
 
             $quote->update([
                 'subtotal' => $subtotal,

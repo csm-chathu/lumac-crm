@@ -22,6 +22,11 @@
       <textarea v-model="paymentForm.notes" class="input-field" rows="3" placeholder="Notes"></textarea>
       <input ref="paymentAttachmentInput" type="file" class="input-field" accept="image/*,.pdf" @change="onPaymentAttachment" />
 
+      <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+        <input v-model="autoIssueInvoice" type="checkbox" class="rounded border-slate-300 text-primary-700 focus:ring-primary-500" />
+        <span>Issue invoice immediately after saving</span>
+      </label>
+
       <button class="btn-primary md:w-auto" :disabled="savingPayment" @click="createPayment">
         {{ savingPayment ? 'Processing...' : 'Log Advance Payment' }}
       </button>
@@ -50,13 +55,14 @@
           <div class="text-gray-500">Amount: {{ toCurrency(payment.amount) }}</div>
           <div class="mt-2">
             <div class="flex gap-2">
-              <a class="text-primary-700 font-semibold" :href="`/api/advance-payments/${payment.id}/receipt?mode=a4`" target="_blank" rel="noreferrer">A4</a>
-              <a class="text-primary-700 font-semibold" :href="`/api/advance-payments/${payment.id}/receipt?mode=thermal`" target="_blank" rel="noreferrer">80mm</a>
+              <a class="text-primary-700 font-semibold" :href="`/api/advance-payments/${payment.id}/invoice?mode=a4`" target="_blank" rel="noreferrer">Invoice A4</a>
+              <a class="text-primary-700 font-semibold" :href="`/api/advance-payments/${payment.id}/invoice?mode=thermal`" target="_blank" rel="noreferrer">Invoice 80mm</a>
             </div>
             <div class="flex gap-2 flex-wrap mt-2">
-              <a class="text-primary-700 font-semibold text-xs" :href="`/api/advance-payments/${payment.id}/receipt?mode=a4`" target="_blank" rel="noreferrer">HTML-A4</a>
-              <a class="text-primary-700 font-semibold text-xs" :href="`/api/advance-payments/${payment.id}/receipt?mode=thermal`" target="_blank" rel="noreferrer">HTML-80mm</a>
-              <a :href="`/api/advance-payments/${payment.id}/pdf`" target="_blank" rel="noopener noreferrer" class="text-green-600 font-semibold text-xs">PDF</a>
+              <a class="text-primary-700 font-semibold text-xs" :href="`/api/advance-payments/${payment.id}/receipt?mode=a4`" target="_blank" rel="noreferrer">Receipt A4</a>
+              <a class="text-primary-700 font-semibold text-xs" :href="`/api/advance-payments/${payment.id}/receipt?mode=thermal`" target="_blank" rel="noreferrer">Receipt 80mm</a>
+              <a :href="`/api/advance-payments/${payment.id}/invoice-pdf`" target="_blank" rel="noopener noreferrer" class="text-green-700 font-semibold text-xs">Invoice PDF</a>
+              <a :href="`/api/advance-payments/${payment.id}/pdf`" target="_blank" rel="noopener noreferrer" class="text-emerald-700 font-semibold text-xs">Receipt PDF</a>
             </div>
           </div>
         </div>
@@ -79,6 +85,7 @@ const loadingPayments = ref(false);
 const savingPayment = ref(false);
 const paymentSearchQuery = ref('');
 const paymentAttachmentInput = ref(null);
+const autoIssueInvoice = ref(true);
 
 const paymentForm = reactive({
   customer_id: '',
@@ -131,11 +138,14 @@ async function createPayment() {
     formData.append('notes', paymentForm.notes || '');
     if (paymentForm.attachment) formData.append('attachment', paymentForm.attachment);
 
-    await axios.post('/advance-payments', formData, {
+    const { data } = await axios.post('/advance-payments', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
     success('Advance payment logged successfully!');
+    if (autoIssueInvoice.value && data?.id) {
+      window.open(`/api/advance-payments/${data.id}/invoice-pdf`, '_blank', 'noopener,noreferrer');
+    }
     paymentForm.customer_id = '';
     paymentForm.amount = '';
     paymentForm.notes = '';

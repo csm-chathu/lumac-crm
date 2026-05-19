@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AgentProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -32,6 +33,7 @@ class AdminAgentController extends Controller
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'status' => 'nullable|in:active,suspended',
         ]);
+        $phone = isset($data['phone']) ? trim((string) $data['phone']) : null;
 
         $agent = User::create([
             'name' => $data['name'],
@@ -42,12 +44,15 @@ class AdminAgentController extends Controller
             'is_active' => $data['is_active'] ?? true,
         ]);
 
-        $agent->agentProfile()->create([
-            'phone' => $data['phone'] ?? null,
+        AgentProfile::updateOrCreate(
+            ['user_id' => $agent->id],
+            [
+            'phone' => $phone !== '' ? $phone : null,
             'discount_rate' => $data['discount_rate'] ?? 35,
             'commission_rate' => $data['commission_rate'] ?? 10,
             'status' => $data['status'] ?? 'active',
-        ]);
+            ]
+        );
 
         return response()->json($agent->load('agentProfile'), 201);
     }
@@ -65,6 +70,7 @@ class AdminAgentController extends Controller
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'status' => 'nullable|in:active,suspended',
         ]);
+        $phone = array_key_exists('phone', $data) ? trim((string) $data['phone']) : null;
 
         $agent->update(array_filter([
             'name' => $data['name'] ?? null,
@@ -72,10 +78,10 @@ class AdminAgentController extends Controller
             'is_active' => $data['is_active'] ?? null,
         ], static fn($v) => $v !== null));
 
-        $agent->agentProfile()->updateOrCreate(
+        AgentProfile::updateOrCreate(
             ['user_id' => $agent->id],
             [
-                'phone' => $data['phone'] ?? $agent->agentProfile?->phone,
+                'phone' => $phone !== '' ? $phone : ($agent->agentProfile?->phone ?? null),
                 'discount_rate' => $data['discount_rate'] ?? $agent->agentProfile?->discount_rate ?? 35,
                 'commission_rate' => $data['commission_rate'] ?? $agent->agentProfile?->commission_rate ?? 10,
                 'status' => $data['status'] ?? $agent->agentProfile?->status ?? 'active',

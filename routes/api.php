@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\AdminConfigController;
 use App\Http\Controllers\Api\AdminAnalyticsController;
 use App\Http\Controllers\Api\AdminClientController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\AgentPaymentController;
 
 // Public auth routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -68,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/expenses', [ExpenseController::class, 'index']);
         Route::post('/expenses', [ExpenseController::class, 'store']);
+        Route::get('/agent-payments', [AgentPaymentController::class, 'index']);
     });
 
     Route::middleware('customer')->group(function () {
@@ -76,6 +78,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/advance-payments/{advancePayment}/receipt', [AdvancePaymentController::class, 'receipt']);
     Route::get('/advance-payments/{advancePayment}/pdf', [AdvancePaymentController::class, 'receiptPdf']);
+    Route::get('/advance-payments/{advancePayment}/invoice', [AdvancePaymentController::class, 'invoice']);
+    Route::get('/advance-payments/{advancePayment}/invoice-pdf', [AdvancePaymentController::class, 'invoicePdf']);
 
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/agents', [AdminAgentController::class, 'index']);
@@ -100,7 +104,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/clients', [AdminClientController::class, 'index']);
         Route::post('/clients/{customer}/portal-access', [AdminClientController::class, 'provisionPortalAccess']);
         Route::get('/expenses', [ExpenseController::class, 'index']);
+        Route::post('/expenses', [ExpenseController::class, 'store']);
         Route::get('/advance-payments', [AdvancePaymentController::class, 'index']);
+        Route::get('/agent-payments', [AgentPaymentController::class, 'index']);
+        Route::post('/agent-payments', [AgentPaymentController::class, 'store']);
+        Route::delete('/agent-payments/{agentPayment}', [AgentPaymentController::class, 'destroy']);
     });
 });
 

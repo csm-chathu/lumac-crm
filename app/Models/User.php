@@ -36,6 +36,10 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = [
+        'phone',
+    ];
+
     /**
      * The attributes that should be cast.
      *
@@ -73,6 +77,11 @@ class User extends Authenticatable
         return $this->hasOne(AgentProfile::class);
     }
 
+    public function getPhoneAttribute(): ?string
+    {
+        return $this->agentProfile?->phone;
+    }
+
     public function quotations()
     {
         return $this->hasMany(Quotation::class);
@@ -91,5 +100,10 @@ class User extends Authenticatable
     public function portalCustomers()
     {
         return $this->hasMany(Customer::class, 'portal_user_id');
+    }
+
+    public function agentPayments()
+    {
+        return $this->hasMany(AgentPayment::class, 'agent_user_id');
     }
 }

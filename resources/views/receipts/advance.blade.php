@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Receipt {{ $payment->receipt_number }}</title>
+    <title>{{ $documentTitle ?? 'Advance Payment Receipt' }} {{ $payment->receipt_number }}</title>
     <style>
         body { font-family: Arial, sans-serif; color: #111; }
         .container { max-width: {{ $printMode === 'thermal' ? '280px' : '860px' }}; margin: 0 auto; }
@@ -16,7 +16,7 @@
 <body>
 <div class="container">
     <h1>Lumac Solution</h1>
-    <p>Advance Payment Receipt</p>
+    <p>{{ $documentTitle ?? 'Advance Payment Receipt' }}</p>
 
     <div class="box">
         <p><strong>Receipt #:</strong> {{ $payment->receipt_number }}</p>

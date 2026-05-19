@@ -20,6 +20,7 @@
         <template v-if="isAgent">
           <input value="0" type="number" class="input-field" placeholder="Discount rate" disabled />
           <input value="30" type="number" class="input-field" placeholder="Commission rate" disabled />
+          <input value="Solutions only" type="text" class="input-field" placeholder="Commission scope" disabled />
         </template>
         <template v-else>
           <input v-model.number="form.discount_rate" type="number" min="0" max="100" step="0.01" class="input-field" placeholder="Discount rate" />
@@ -27,7 +28,7 @@
         </template>
       </div>
 
-      <p v-if="isAgent" class="text-xs text-gray-500">For agents, discount is not applied and commission is fixed at 30%.</p>
+      <p v-if="isAgent" class="text-xs text-gray-500">For agents, discount is not applied. Commission is fixed at 30% and calculated from solution items only (devices are excluded).</p>
 
       <div class="space-y-3 border border-gray-100 rounded-xl p-4">
         <div class="flex items-center justify-between gap-3 flex-wrap">

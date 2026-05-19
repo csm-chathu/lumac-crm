@@ -27,6 +27,7 @@ import {
   HomeIcon,
   Squares2X2Icon,
   UserGroupIcon,
+  IdentificationIcon,
   BanknotesIcon,
   CurrencyDollarIcon,
   ArrowsRightLeftIcon,
@@ -37,6 +38,7 @@ import {
 const menuTiles = [
   { label: 'Admin Home', description: 'Main board', to: '/admin/dashboard', icon: HomeIcon },
   { label: 'Solutions', description: 'Catalog setup', to: '/master-data/solutions', icon: Squares2X2Icon },
+  { label: 'Agents', description: 'Agent directory', to: '/admin/agents', icon: IdentificationIcon },
   { label: 'Customers', description: 'Client records', to: '/customers', icon: UserGroupIcon },
   { label: 'Expenses', description: 'Cost control', to: '/finance/expenses', icon: CurrencyDollarIcon },
   { label: 'Payments', description: 'Advance receipts', to: '/finance/payments', icon: BanknotesIcon },

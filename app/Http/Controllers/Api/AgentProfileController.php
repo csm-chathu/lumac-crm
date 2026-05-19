@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AgentProfile;
 use App\Models\Quotation;
 use Illuminate\Http\Request;
 
@@ -21,14 +22,15 @@ class AgentProfileController extends Controller
             'name' => 'sometimes|string|max:255',
             'phone' => 'nullable|string|max:50',
         ]);
+        $phone = array_key_exists('phone', $data) ? trim((string) $data['phone']) : null;
 
         if (isset($data['name'])) {
             $request->user()->update(['name' => $data['name']]);
         }
 
-        $request->user()->agentProfile()->updateOrCreate(
+        AgentProfile::updateOrCreate(
             ['user_id' => $request->user()->id],
-            ['phone' => $data['phone'] ?? null]
+            ['phone' => $phone !== '' ? $phone : null]
         );
 
         return response()->json($request->user()->fresh()->load('agentProfile'));

@@ -95,7 +95,7 @@
         <div class="header">
             <div class="company-info">
                 <h1>{{ config('app.name', 'Lumac') }}</h1>
-                <p>Advance Payment Receipt</p>
+                <p>{{ $documentTitle ?? 'Advance Payment Receipt' }}</p>
             </div>
             <div class="receipt-info">
                 <div class="receipt-number">{{ $payment->receipt_number }}</div>

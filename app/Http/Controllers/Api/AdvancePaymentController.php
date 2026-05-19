@@ -60,13 +60,7 @@ class AdvancePaymentController extends Controller
 
     public function receipt(Request $request, AdvancePayment $advancePayment)
     {
-        $customer = $advancePayment->customer;
-        abort_if(
-            ! $request->user()->is_admin
-            && $advancePayment->user_id !== $request->user()->id
-            && $customer?->portal_user_id !== $request->user()->id,
-            403
-        );
+        $customer = $this->authorizeAccess($request, $advancePayment);
 
         $customer->load('advancePayments');
         $totalPaid = (float) $customer->advancePayments()->sum('amount');
@@ -77,10 +71,54 @@ class AdvancePaymentController extends Controller
             'totalPaid' => number_format($totalPaid, 2, '.', ''),
             'remaining' => number_format($remaining, 2, '.', ''),
             'printMode' => $request->query('mode', 'a4'),
+            'documentTitle' => 'Advance Payment Receipt',
         ]);
     }
 
     public function receiptPdf(Request $request, AdvancePayment $advancePayment)
+    {
+        $this->authorizeAccess($request, $advancePayment);
+
+        $payment = $advancePayment->load(['customer', 'user']);
+        $pdf = Pdf::loadView('receipts.pdf', [
+            'payment' => $payment,
+            'documentTitle' => 'Advance Payment Receipt',
+        ]);
+
+        return $pdf->download("receipt-{$payment->receipt_number}.pdf");
+    }
+
+    public function invoice(Request $request, AdvancePayment $advancePayment)
+    {
+        $customer = $this->authorizeAccess($request, $advancePayment);
+
+        $customer->load('advancePayments');
+        $totalPaid = (float) $customer->advancePayments()->sum('amount');
+        $remaining = max((float) $customer->contract_value - $totalPaid, 0);
+
+        return view('receipts.advance', [
+            'payment' => $advancePayment->load(['customer', 'user']),
+            'totalPaid' => number_format($totalPaid, 2, '.', ''),
+            'remaining' => number_format($remaining, 2, '.', ''),
+            'printMode' => $request->query('mode', 'a4'),
+            'documentTitle' => 'Advance Payment Invoice',
+        ]);
+    }
+
+    public function invoicePdf(Request $request, AdvancePayment $advancePayment)
+    {
+        $this->authorizeAccess($request, $advancePayment);
+
+        $payment = $advancePayment->load(['customer', 'user']);
+        $pdf = Pdf::loadView('receipts.pdf', [
+            'payment' => $payment,
+            'documentTitle' => 'Advance Payment Invoice',
+        ]);
+
+        return $pdf->download("invoice-{$payment->receipt_number}.pdf");
+    }
+
+    private function authorizeAccess(Request $request, AdvancePayment $advancePayment): Customer
     {
         $customer = $advancePayment->customer;
         abort_if(
@@ -90,11 +128,6 @@ class AdvancePaymentController extends Controller
             403
         );
 
-        $payment = $advancePayment->load(['customer', 'user']);
-        $pdf = Pdf::loadView('receipts.pdf', [
-            'payment' => $payment,
-        ]);
-
-        return $pdf->download("receipt-{$payment->receipt_number}.pdf");
+        return $customer;
     }
 }

@@ -26,7 +26,23 @@
     <div v-if="store.loading" class="card text-gray-500">Loading customer profile...</div>
 
     <template v-else-if="customer">
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <article class="card">
+          <p class="text-xs text-gray-500 uppercase tracking-wide">Contract Value</p>
+          <p class="text-2xl font-bold text-gray-900 mt-2">{{ toCurrency(customer.contract_value) }}</p>
+        </article>
+        <article class="card">
+          <p class="text-xs text-gray-500 uppercase tracking-wide">Total Paid</p>
+          <p class="text-2xl font-bold text-green-700 mt-2">{{ toCurrency(totalPaid) }}</p>
+        </article>
+        <article class="card">
+          <p class="text-xs text-gray-500 uppercase tracking-wide">Remaining Balance</p>
+          <p class="text-2xl font-bold text-amber-700 mt-2">{{ toCurrency(remainingBalance) }}</p>
+        </article>
+      </section>
+
       <section class="card">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Customer Details</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
             <p class="text-gray-500">Full Name</p>
@@ -38,7 +54,11 @@
           </div>
           <div>
             <p class="text-gray-500">Contact</p>
-            <p class="font-medium text-gray-800 mt-1">{{ customer.email || customer.phone || 'N/A' }}</p>
+            <p class="font-medium text-gray-800 mt-1">{{ customer.email || 'N/A' }}</p>
+          </div>
+          <div>
+            <p class="text-gray-500">Phone</p>
+            <p class="font-medium text-gray-800 mt-1">{{ customer.phone || 'N/A' }}</p>
           </div>
           <div>
             <p class="text-gray-500">Status</p>
@@ -56,9 +76,9 @@
             <p class="text-gray-500">Contract Value</p>
             <p class="font-medium text-gray-800 mt-1">{{ toCurrency(customer.contract_value) }}</p>
           </div>
-          <div>
-            <p class="text-gray-500">Paid / Remaining</p>
-            <p class="font-medium text-gray-800 mt-1">{{ toCurrency(totalPaid) }} / {{ toCurrency(remainingBalance) }}</p>
+          <div v-if="customer.portal_user">
+            <p class="text-gray-500">Portal Account</p>
+            <p class="font-medium text-gray-800 mt-1">{{ customer.portal_user.name }} ({{ customer.portal_user.email }})</p>
           </div>
         </div>
 
@@ -66,6 +86,39 @@
           <p class="text-gray-500 text-sm">Notes</p>
           <p class="text-gray-700 mt-1">{{ customer.notes }}</p>
         </div>
+      </section>
+
+      <section class="card">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Advance Payments</h2>
+        <div v-if="payments.length" class="space-y-3">
+          <article v-for="payment in payments" :key="payment.id" class="border border-gray-100 rounded-xl p-4">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+              <div>
+                <p class="text-sm font-semibold text-gray-800">{{ toCurrency(payment.amount) }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ formatDate(payment.payment_date) }} • {{ payment.payment_method || 'N/A' }}</p>
+                <p class="text-xs text-gray-500 mt-1">Receipt: {{ payment.receipt_number || 'N/A' }}</p>
+              </div>
+              <p class="text-xs text-gray-400">Recorded {{ formatDate(payment.created_at, true) }}</p>
+            </div>
+            <p v-if="payment.notes" class="text-sm text-gray-600 mt-2">{{ payment.notes }}</p>
+          </article>
+        </div>
+        <p v-else class="text-sm text-gray-500">No payments recorded yet.</p>
+      </section>
+
+      <section class="card">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Projects</h2>
+        <div v-if="projects.length" class="space-y-3">
+          <article v-for="project in projects" :key="project.id" class="border border-gray-100 rounded-xl p-4">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-sm font-semibold text-gray-800">{{ project.project_name || project.name || 'Project' }}</h3>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">{{ project.status || 'N/A' }}</span>
+            </div>
+            <p v-if="project.description" class="text-sm text-gray-600 mt-2">{{ project.description }}</p>
+            <p class="text-xs text-gray-500 mt-2">Updated: {{ formatDate(project.updated_at, true) }}</p>
+          </article>
+        </div>
+        <p v-else class="text-sm text-gray-500">No projects linked to this customer yet.</p>
       </section>
 
       <section class="card">
@@ -154,7 +207,9 @@ const quoteForm = reactive({
 
 const customer = computed(() => store.currentCustomer);
 const requestedFeatures = computed(() => (store.currentCustomer?.requirements || []).filter((item) => item.is_requested));
-const totalPaid = computed(() => (store.currentCustomer?.advance_payments || []).reduce((sum, item) => sum + Number(item.amount || 0), 0));
+const payments = computed(() => store.currentCustomer?.advance_payments || store.currentCustomer?.advancePayments || []);
+const projects = computed(() => store.currentCustomer?.projects || []);
+const totalPaid = computed(() => payments.value.reduce((sum, item) => sum + Number(item.amount || 0), 0));
 const remainingBalance = computed(() => Math.max(Number(store.currentCustomer?.contract_value || 0) - totalPaid.value, 0));
 
 function statusLabel(status) {

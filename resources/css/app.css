@@ -10,34 +10,34 @@
     }
 
     body {
-        @apply bg-gray-50 text-gray-900 font-sans;
+        @apply bg-slate-50 text-slate-900 font-sans;
         overscroll-behavior-y: none;
     }
 }
 
 @layer components {
     .btn-primary {
-        @apply bg-primary-600 text-white px-4 md:px-5 py-3 md:py-3.5 rounded-xl font-semibold text-sm md:text-base active:bg-primary-700 hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full;
+        @apply bg-primary-700 text-white px-4 md:px-5 py-3 md:py-3.5 rounded-xl font-semibold text-sm md:text-base active:bg-primary-800 hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full;
     }
 
     .btn-secondary {
-        @apply bg-gray-100 text-gray-700 px-4 md:px-5 py-3 md:py-3.5 rounded-xl font-semibold text-sm md:text-base active:bg-gray-200 hover:bg-gray-200 transition-colors w-full;
+        @apply bg-slate-100 text-slate-700 px-4 md:px-5 py-3 md:py-3.5 rounded-xl font-semibold text-sm md:text-base active:bg-slate-200 hover:bg-slate-200 transition-colors w-full;
     }
 
     .input-field {
-        @apply w-full bg-white border border-gray-200 rounded-xl px-4 md:px-5 py-3 md:py-3.5 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+        @apply w-full bg-white border border-slate-200 rounded-xl px-4 md:px-5 py-3 md:py-3.5 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
     }
 
     .card {
-        @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6;
+        @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-4 md:p-6;
     }
 
     .tab-active {
-        @apply text-primary-600 border-b-2 border-primary-600;
+        @apply text-primary-700 border-b-2 border-primary-700;
     }
 
     .tab-inactive {
-        @apply text-gray-400;
+        @apply text-slate-400;
     }
 }
 

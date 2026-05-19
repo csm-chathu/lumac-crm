@@ -1,49 +1,73 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6">
-    <div>
-      <p class="text-xs uppercase tracking-wide text-primary-700 font-semibold">Master Data</p>
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Solutions Management</h1>
-      <p class="text-sm text-gray-500 mt-1">Maintain the official solution catalog and checklist features used by agents.</p>
+    <div class="flex justify-between items-start gap-3">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-primary-700 font-semibold">Master Data</p>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Solutions Management</h1>
+        <p class="text-sm text-gray-500 mt-1">Maintain the official solution catalog and checklist features used by agents.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <router-link to="/admin/agents" class="btn-secondary px-4 py-2 text-sm md:text-base whitespace-nowrap">
+          Agent Directory
+        </router-link>
+        <button @click="openAddSolutionModal" class="btn-primary px-4 py-2 text-sm md:text-base md:w-auto whitespace-nowrap inline-flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m-7-7h14" />
+          </svg>
+          <span>Add Solution</span>
+        </button>
+      </div>
     </div>
 
-    <section class="card">
-      <h2 class="text-lg font-semibold text-gray-800 mb-4">{{ editingSolutionId ? 'Edit Solution' : 'Add Solution' }}</h2>
-      <form class="grid grid-cols-1 md:grid-cols-2 gap-4" @submit.prevent="saveSolution">
-        <input v-model="solutionForm.name" type="text" class="input-field" placeholder="Solution name" required />
-        <input v-model.number="solutionForm.base_price" type="number" min="0.01" step="0.01" class="input-field" placeholder="Base price" required />
-        <input v-model="solutionForm.demo_url" type="url" class="input-field" placeholder="Demo URL" />
-        <input v-model="solutionForm.demo_username" type="text" class="input-field" placeholder="Demo username" />
-        <input v-model="solutionForm.demo_email" type="email" class="input-field" placeholder="Demo email" />
-        <input v-model="solutionForm.demo_password" type="text" class="input-field" placeholder="Demo password" />
-        <select v-model="solutionForm.is_active" class="input-field">
-          <option :value="true">Active</option>
-          <option :value="false">Inactive</option>
-        </select>
-        <textarea v-model="solutionForm.description" rows="3" class="input-field md:col-span-2" placeholder="Description"></textarea>
-
-        <div class="md:col-span-2 flex gap-3 justify-end">
-          <button v-if="editingSolutionId" type="button" class="btn-secondary md:w-auto" @click="resetSolutionForm">Cancel</button>
-          <button class="btn-primary md:w-auto" :disabled="savingSolution">{{ savingSolution ? 'Saving...' : (editingSolutionId ? 'Update Solution' : 'Create Solution') }}</button>
+    <!-- Add/Edit Solution Modal -->
+    <div v-if="showAddSolutionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+          <h2 class="text-xl font-semibold text-gray-800">{{ editingSolutionId ? 'Edit Solution' : 'Add Solution' }}</h2>
+          <button @click="closeSolutionModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
         </div>
-      </form>
-    </section>
+
+        <form class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4" @submit.prevent="saveSolution">
+          <input v-model="solutionForm.name" type="text" class="input-field" placeholder="Solution name" required />
+          <input v-model.number="solutionForm.base_price" type="number" min="0.01" step="0.01" class="input-field" placeholder="Base price" required />
+          <input v-model="solutionForm.demo_url" type="url" class="input-field" placeholder="Demo URL" />
+          <input v-model="solutionForm.demo_username" type="text" class="input-field" placeholder="Demo username" />
+          <input v-model="solutionForm.demo_email" type="email" class="input-field" placeholder="Demo email" />
+          <input v-model="solutionForm.demo_password" type="text" class="input-field" placeholder="Demo password" />
+          <select v-model="solutionForm.is_active" class="input-field">
+            <option :value="true">Active</option>
+            <option :value="false">Inactive</option>
+          </select>
+          <textarea v-model="solutionForm.description" rows="3" class="input-field md:col-span-2" placeholder="Description"></textarea>
+
+          <div class="md:col-span-2 flex gap-3 justify-end border-t border-gray-100 pt-4">
+            <button type="button" class="btn-secondary px-6 py-2" @click="closeSolutionModal">Cancel</button>
+            <button type="submit" class="btn-primary px-6 py-2" :disabled="savingSolution">{{ savingSolution ? 'Saving...' : (editingSolutionId ? 'Update Solution' : 'Create Solution') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <section class="card">
       <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between mb-4">
         <h2 class="text-lg font-semibold text-gray-800">Catalog Entries</h2>
-        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full md:w-auto md:items-center">
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto md:flex-nowrap">
           <input
             v-model="searchQuery"
             type="text"
-            class="input-field w-full sm:flex-1 md:flex-none"
+            class="input-field flex-1 min-w-[220px] md:w-72"
             placeholder="Search solutions..."
           />
-          <select v-model="filterStatus" class="input-field w-full sm:w-auto md:w-auto">
+          <select v-model="filterStatus" class="input-field w-auto min-w-[140px]">
             <option value="">All solutions</option>
             <option value="1">Active</option>
             <option value="0">Inactive</option>
           </select>
-          <button v-if="searchQuery || filterStatus" @click="resetFilters" class="btn-secondary px-4 py-2 w-full sm:w-auto">
+          <button v-if="searchQuery || filterStatus" @click="resetFilters" class="btn-secondary px-4 py-2 w-auto">
             Reset
           </button>
         </div>
@@ -54,9 +78,17 @@
         <article v-for="solution in filteredSolutions" :key="solution.id" class="border border-gray-100 rounded-2xl p-4">
           <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
             <div>
-              <h3 class="font-semibold text-gray-800">{{ solution.name }}</h3>
+              <div class="flex items-center gap-2">
+                <h3 class="font-semibold text-gray-800">{{ solution.name }}</h3>
+                <span
+                  class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                  :class="solution.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'"
+                >
+                  {{ solution.is_active ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
               <p class="text-sm text-gray-600 mt-1">{{ solution.description || 'No description' }}</p>
-              <p class="text-xs text-gray-500 mt-2">Base: {{ toCurrency(solution.base_price) }} | Agent: {{ toCurrency(solution.agent_price) }}</p>
+              <p class="text-xs text-gray-500 mt-2">Base: {{ toCurrency(solution.base_price) }}</p>
             </div>
             <div class="flex gap-2">
               <button class="btn-secondary md:w-auto px-4 py-2" @click="startEditSolution(solution)">Edit</button>
@@ -98,7 +130,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref, computed } from 'vue';
+import { onMounted, reactive, ref, computed, watch } from 'vue';
 import { useAdminSolutionsStore } from '../stores/adminSolutions';
 import { useToast } from '../composables/useToast';
 import { useSearch } from '../composables/useSearch';
@@ -111,6 +143,7 @@ const editingSolutionId = ref(null);
 const featureForms = reactive({});
 const filterStatus = ref('');
 const searchQuery = ref('');
+const showAddSolutionModal = ref(false);
 
 const solutionForm = reactive({
   name: '',
@@ -178,6 +211,16 @@ function resetSolutionForm() {
   solutionForm.is_active = true;
 }
 
+function openAddSolutionModal() {
+  resetSolutionForm();
+  showAddSolutionModal.value = true;
+}
+
+function closeSolutionModal() {
+  resetSolutionForm();
+  showAddSolutionModal.value = false;
+}
+
 function resetFeatureForm(solutionId) {
   ensureFeatureForm(solutionId);
   featureForms[solutionId].editingId = null;
@@ -197,6 +240,7 @@ function startEditSolution(solution) {
   solutionForm.demo_email = solution.demo_email || '';
   solutionForm.demo_password = solution.demo_password || '';
   solutionForm.is_active = !!solution.is_active;
+  showAddSolutionModal.value = true;
 }
 
 function startEditFeature(solutionId, feature) {
@@ -230,7 +274,7 @@ async function saveSolution() {
       success('Solution created successfully!');
     }
 
-    resetSolutionForm();
+    closeSolutionModal();
     await store.fetchSolutions();
     hydrateFeatureForms();
   } catch (e) {
@@ -296,6 +340,14 @@ function hydrateFeatureForms() {
     ensureFeatureForm(solution.id);
   }
 }
+
+watch(
+  () => store.solutions,
+  () => {
+    hydrateFeatureForms();
+  },
+  { immediate: true }
+);
 
 onMounted(async () => {
   await store.fetchSolutions();
