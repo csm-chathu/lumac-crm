@@ -45,7 +45,6 @@ function withDescriptions(items) {
 }
 
 export function getNavItemsForRole({ isAdmin, isCustomer }) {
-  // Show Quotations menu for all roles
   if (isAdmin) {
     return withDescriptions([
       { name: 'master-data', to: '/master-data/solutions', label: 'Solutions', icon: CircleStackIcon, activeIcon: CircleStackIconSolid },
@@ -62,7 +61,6 @@ export function getNavItemsForRole({ isAdmin, isCustomer }) {
   if (isCustomer) {
     return withDescriptions([
       { name: 'client-portal', to: '/client/portal', label: 'Portal', icon: RectangleGroupIcon, activeIcon: RectangleGroupIconSolid },
-      { name: 'quotations', to: '/quotations', label: 'Quotations', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
       { name: 'profile', to: '/profile', label: 'Profile', icon: UserCircleIcon, activeIcon: UserCircleIconSolid },
     ]);
   }
