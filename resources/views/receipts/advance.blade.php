@@ -24,9 +24,9 @@
         <p><strong>Customer:</strong> {{ $payment->customer->full_name }}</p>
         <p><strong>Handled By:</strong> {{ $payment->user?->name ?? 'System' }}</p>
         <p><strong>Method:</strong> {{ $payment->payment_method }}</p>
-        <p><strong>Paid Now:</strong> {{ number_format((float) $payment->amount, 2) }}</p>
-        <p><strong>Total Paid:</strong> {{ $totalPaid }}</p>
-        <p><strong>Remaining Balance:</strong> {{ $remaining }}</p>
+        <p><strong>Paid Now:</strong> LKR {{ number_format((float) $payment->amount, 2) }}</p>
+        <p><strong>Total Paid:</strong> LKR {{ $totalPaid }}</p>
+        <p><strong>Remaining Balance:</strong> LKR {{ $remaining }}</p>
     </div>
 
     @if($payment->notes)

@@ -53,6 +53,7 @@
 import { ref } from 'vue';
 import { useTransactionStore } from '../stores/transactions';
 import { XMarkIcon } from '@heroicons/vue/24/outline';
+import { formatCurrency as formatLkrCurrency } from '../utils/currency';
 
 const props = defineProps({ transaction: Object });
 const emit  = defineEmits(['close', 'deleted']);
@@ -60,7 +61,7 @@ const store   = useTransactionStore();
 const deleting = ref(false);
 
 function formatCurrency(val) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
+  return formatLkrCurrency(val);
 }
 function formatDate(date) {
   return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });

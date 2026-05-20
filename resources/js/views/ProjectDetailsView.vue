@@ -67,6 +67,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
+import { formatCurrency } from '../utils/currency';
 
 const authStore = useAuthStore();
 const isAdmin = computed(() => authStore.user.role === 'admin');
@@ -107,4 +108,8 @@ const updatePayment = async () => {
 const updateRequirements = async () => {
   await axios.put(`/api/projects/${project.value.id}`, { special_requirements: project.value.special_requirements });
 };
+
+function toCurrency(amount) {
+  return formatCurrency(amount);
+}
 </script>

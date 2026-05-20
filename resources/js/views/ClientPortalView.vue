@@ -62,12 +62,13 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
+import { formatCurrency } from '../utils/currency';
 
 const loading = ref(false);
 const portal = ref(null);
 
 function toCurrency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0));
+  return formatCurrency(value);
 }
 
 function prettyStage(stage) {

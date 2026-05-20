@@ -25,6 +25,7 @@
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
+import { formatCurrency } from '../utils/currency';
 
 const authStore = useAuthStore();
 const isAdmin = computed(() => authStore.user.role === 'admin');
@@ -38,9 +39,6 @@ onMounted(async () => {
 });
 
 function toCurrency(amount) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount);
+  return formatCurrency(amount);
 }
 </script>

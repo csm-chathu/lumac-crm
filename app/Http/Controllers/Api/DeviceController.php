@@ -25,6 +25,7 @@ class DeviceController extends Controller
             'model' => 'nullable|string|max:255',
             'purchase_price' => 'required|numeric',
             'selling_price' => 'required|numeric',
+            'image_url' => 'nullable|string|url',
         ]);
         $device = Device::create($validated);
         return response()->json($device, 201);
@@ -41,6 +42,7 @@ class DeviceController extends Controller
             'model' => 'nullable|string|max:255',
             'purchase_price' => 'required|numeric',
             'selling_price' => 'required|numeric',
+            'image_url' => 'nullable|string|url',
         ]);
         $device->update($validated);
         return response()->json($device);

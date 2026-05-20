@@ -1,5 +1,7 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6">
+    <ReceiptPrintModal ref="receiptModal" />
+
     <div>
       <p class="text-xs uppercase tracking-wide text-primary-700 font-semibold">Finance Hub</p>
       <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Advance Payment Management</h1>
@@ -54,15 +56,13 @@
           <div class="text-gray-500">Customer: {{ payment.customer?.full_name || 'N/A' }}</div>
           <div class="text-gray-500">Amount: {{ toCurrency(payment.amount) }}</div>
           <div class="mt-2">
-            <div class="flex gap-2">
-              <a class="text-primary-700 font-semibold" :href="`/api/advance-payments/${payment.id}/invoice?mode=a4`" target="_blank" rel="noreferrer">Invoice A4</a>
-              <a class="text-primary-700 font-semibold" :href="`/api/advance-payments/${payment.id}/invoice?mode=thermal`" target="_blank" rel="noreferrer">Invoice 80mm</a>
-            </div>
-            <div class="flex gap-2 flex-wrap mt-2">
-              <a class="text-primary-700 font-semibold text-xs" :href="`/api/advance-payments/${payment.id}/receipt?mode=a4`" target="_blank" rel="noreferrer">Receipt A4</a>
-              <a class="text-primary-700 font-semibold text-xs" :href="`/api/advance-payments/${payment.id}/receipt?mode=thermal`" target="_blank" rel="noreferrer">Receipt 80mm</a>
-              <a :href="`/api/advance-payments/${payment.id}/invoice-pdf`" target="_blank" rel="noopener noreferrer" class="text-green-700 font-semibold text-xs">Invoice PDF</a>
-              <a :href="`/api/advance-payments/${payment.id}/pdf`" target="_blank" rel="noopener noreferrer" class="text-emerald-700 font-semibold text-xs">Receipt PDF</a>
+            <div class="flex gap-2 flex-wrap">
+              <button class="text-primary-700 font-semibold text-sm" @click="openReceipt(payment)">
+                📄 Receipt
+              </button>
+              <button class="text-green-700 font-semibold text-sm" @click="openInvoice(payment)">
+                🧾 Invoice
+              </button>
             </div>
           </div>
         </div>
@@ -76,6 +76,8 @@
 import { onMounted, reactive, ref, computed } from 'vue';
 import { useCustomersStore } from '../stores/customers';
 import { useToast } from '../composables/useToast';
+import ReceiptPrintModal from '../components/ReceiptPrintModal.vue';
+import { formatCurrency } from '../utils/currency';
 
 const customersStore = useCustomersStore();
 const { success, error } = useToast();
@@ -86,6 +88,8 @@ const savingPayment = ref(false);
 const paymentSearchQuery = ref('');
 const paymentAttachmentInput = ref(null);
 const autoIssueInvoice = ref(true);
+
+const receiptModal = ref(null);
 
 const paymentForm = reactive({
   customer_id: '',
@@ -108,7 +112,7 @@ const filteredPayments = computed(() => {
 });
 
 function toCurrency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0));
+  return formatCurrency(value);
 }
 
 function onPaymentAttachment(event) {
@@ -144,7 +148,7 @@ async function createPayment() {
 
     success('Advance payment logged successfully!');
     if (autoIssueInvoice.value && data?.id) {
-      window.open(`/api/advance-payments/${data.id}/invoice-pdf`, '_blank', 'noopener,noreferrer');
+      receiptModal.value?.open(data, 'invoice');
     }
     paymentForm.customer_id = '';
     paymentForm.amount = '';
@@ -158,6 +162,14 @@ async function createPayment() {
   } finally {
     savingPayment.value = false;
   }
+}
+
+function openReceipt(payment) {
+  receiptModal.value?.open(payment, 'receipt');
+}
+
+function openInvoice(payment) {
+  receiptModal.value?.open(payment, 'invoice');
 }
 
 onMounted(async () => {

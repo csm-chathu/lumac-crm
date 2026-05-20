@@ -97,6 +97,7 @@
 import { onMounted, reactive, ref, computed } from 'vue';
 import { useToast } from '../composables/useToast';
 import { useAuthStore } from '../stores/auth';
+import { formatCurrency } from '../utils/currency';
 
 const { success, error } = useToast();
 const authStore = useAuthStore();
@@ -127,7 +128,7 @@ const filteredExpenses = computed(() => {
 });
 
 function toCurrency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0));
+  return formatCurrency(value);
 }
 
 function receiptUrl(path) {

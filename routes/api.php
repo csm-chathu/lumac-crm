@@ -78,8 +78,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/advance-payments/{advancePayment}/receipt', [AdvancePaymentController::class, 'receipt']);
     Route::get('/advance-payments/{advancePayment}/pdf', [AdvancePaymentController::class, 'receiptPdf']);
-    Route::get('/advance-payments/{advancePayment}/invoice', [AdvancePaymentController::class, 'invoice']);
-    Route::get('/advance-payments/{advancePayment}/invoice-pdf', [AdvancePaymentController::class, 'invoicePdf']);
 
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/agents', [AdminAgentController::class, 'index']);

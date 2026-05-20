@@ -23,6 +23,8 @@
 </template>
 
 <script setup>
+import { formatCurrency as formatLkrCurrency } from '../utils/currency';
+
 defineProps({ transaction: Object });
 
 const iconMap = {
@@ -37,7 +39,7 @@ function categoryEmoji(icon) {
 }
 
 function formatCurrency(val) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
+  return formatLkrCurrency(val);
 }
 
 function formatDate(date) {

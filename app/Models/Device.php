@@ -14,5 +14,6 @@ class Device extends Model
         'model',
         'purchase_price',
         'selling_price',
+        'image_url',
     ];
 }

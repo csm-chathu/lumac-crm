@@ -1,5 +1,7 @@
 <template>
   <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6">
+    <ReceiptPrintModal ref="receiptModal" />
+
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <router-link to="/customers" class="text-sm text-primary-700 hover:text-primary-900">Back to Customers</router-link>
@@ -89,16 +91,57 @@
       </section>
 
       <section class="card">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Advance Payments</h2>
-        <div v-if="payments.length" class="space-y-3">
-          <article v-for="payment in payments" :key="payment.id" class="border border-gray-100 rounded-xl p-4">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800">Advance Payments</h2>
+            <p class="text-sm text-gray-500 mt-1">Record and maintain all payments for this customer from the profile.</p>
+          </div>
+          <button @click="openPaymentModal()" class="btn-primary md:w-auto inline-flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Add Payment</span>
+          </button>
+        </div>
+
+        <div v-if="sortedPayments.length" class="space-y-3">
+          <article v-for="payment in sortedPayments" :key="payment.id" class="border border-gray-100 rounded-xl p-4">
             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
               <div>
                 <p class="text-sm font-semibold text-gray-800">{{ toCurrency(payment.amount) }}</p>
                 <p class="text-xs text-gray-500 mt-1">{{ formatDate(payment.payment_date) }} • {{ payment.payment_method || 'N/A' }}</p>
                 <p class="text-xs text-gray-500 mt-1">Receipt: {{ payment.receipt_number || 'N/A' }}</p>
+                <p v-if="payment.attachment_path" class="text-xs text-gray-500 mt-1">Attachment saved</p>
               </div>
-              <p class="text-xs text-gray-400">Recorded {{ formatDate(payment.created_at, true) }}</p>
+              <div class="text-left sm:text-right space-y-2">
+                <p class="text-xs text-gray-400">Recorded {{ formatDate(payment.created_at, true) }}</p>
+                <div class="flex flex-wrap gap-2 sm:justify-end">
+                  <button @click="openReceipt(payment)" class="inline-flex items-center gap-1.5 text-primary-700 font-semibold text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 4h7l5 5v11a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z" />
+                    </svg>
+                    <span>Receipt</span>
+                  </button>
+                  <button @click="openInvoice(payment)" class="inline-flex items-center gap-1.5 text-green-700 font-semibold text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-11 9h12a1 1 0 001-1V8a2 2 0 00-2-2H7a2 2 0 00-2 2v11a1 1 0 001 1z" />
+                    </svg>
+                    <span>Invoice</span>
+                  </button>
+                  <button @click="startEditPayment(payment)" class="inline-flex items-center gap-1.5 text-amber-700 font-semibold text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L12 15l-4 1 1-4 8.586-8.586z" />
+                    </svg>
+                    <span>Edit</span>
+                  </button>
+                  <button @click="deletePayment(payment)" class="inline-flex items-center gap-1.5 text-red-700 font-semibold text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
+                    </svg>
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </div>
             </div>
             <p v-if="payment.notes" class="text-sm text-gray-600 mt-2">{{ payment.notes }}</p>
           </article>
@@ -147,6 +190,66 @@
 
     <div v-else class="card text-gray-500">Customer not found.</div>
 
+    <div v-if="showPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full space-y-4 p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">{{ editingPaymentId ? 'Edit Payment' : 'Add Payment' }}</h3>
+            <p class="text-sm text-gray-500 mt-1">{{ customer?.full_name }}</p>
+          </div>
+          <button @click="closePaymentModal" class="text-gray-400 hover:text-gray-600" :disabled="savingPayment">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm font-medium text-gray-700">Amount</label>
+            <input v-model.number="paymentForm.amount" type="number" min="0.01" step="0.01" class="input-field mt-1" placeholder="Advance amount" />
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-700">Payment Date</label>
+            <input v-model="paymentForm.payment_date" type="date" class="input-field mt-1" />
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-700">Payment Method</label>
+            <input v-model="paymentForm.payment_method" class="input-field mt-1" placeholder="Cash, bank transfer, etc." />
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-700">Attachment</label>
+            <input ref="paymentAttachmentInput" type="file" class="input-field mt-1" accept="image/*,.pdf" @change="onPaymentAttachment" />
+          </div>
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700">Notes</label>
+          <textarea v-model="paymentForm.notes" class="input-field mt-1" rows="3" placeholder="Payment notes"></textarea>
+        </div>
+
+        <label v-if="paymentForm.existing_attachment" class="inline-flex items-center gap-2 text-sm text-gray-700">
+          <input v-model="paymentForm.remove_attachment" type="checkbox" class="rounded border-slate-300 text-primary-700 focus:ring-primary-500" />
+          <span>Remove current attachment</span>
+        </label>
+
+        <div class="flex gap-3 pt-2">
+          <button @click="closePaymentModal" :disabled="savingPayment" class="btn-secondary flex-1 inline-flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Cancel</span>
+          </button>
+          <button @click="savePayment" :disabled="savingPayment" class="btn-primary flex-1 inline-flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ savingPayment ? 'Saving...' : editingPaymentId ? 'Update Payment' : 'Add Payment' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Quick Quote Modal -->
     <div v-if="showQuoteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-2xl shadow-xl max-w-md w-full space-y-4 p-6">
@@ -192,6 +295,8 @@ import { computed, onMounted, ref, reactive } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCustomersStore } from '../stores/customers';
 import { useToast } from '../composables/useToast';
+import ReceiptPrintModal from '../components/ReceiptPrintModal.vue';
+import { formatCurrency } from '../utils/currency';
 
 const route = useRoute();
 const router = useRouter();
@@ -199,15 +304,34 @@ const store = useCustomersStore();
 const { success, error } = useToast();
 
 const showQuoteModal = ref(false);
+const showPaymentModal = ref(false);
 const creatingQuote = ref(false);
+const savingPayment = ref(false);
+const editingPaymentId = ref(null);
+const paymentAttachmentInput = ref(null);
+const receiptModal = ref(null);
 const quoteForm = reactive({
   discount_rate: 35,
   commission_rate: 10,
+});
+const paymentForm = reactive({
+  amount: '',
+  payment_date: new Date().toISOString().slice(0, 10),
+  payment_method: 'cash',
+  notes: '',
+  attachment: null,
+  existing_attachment: null,
+  remove_attachment: false,
 });
 
 const customer = computed(() => store.currentCustomer);
 const requestedFeatures = computed(() => (store.currentCustomer?.requirements || []).filter((item) => item.is_requested));
 const payments = computed(() => store.currentCustomer?.advance_payments || store.currentCustomer?.advancePayments || []);
+const sortedPayments = computed(() => [...payments.value].sort((left, right) => {
+  const rightTime = new Date(right.payment_date || right.created_at || 0).getTime();
+  const leftTime = new Date(left.payment_date || left.created_at || 0).getTime();
+  return rightTime - leftTime || Number(right.id || 0) - Number(left.id || 0);
+}));
 const projects = computed(() => store.currentCustomer?.projects || []);
 const totalPaid = computed(() => payments.value.reduce((sum, item) => sum + Number(item.amount || 0), 0));
 const remainingBalance = computed(() => Math.max(Number(store.currentCustomer?.contract_value || 0) - totalPaid.value, 0));
@@ -226,7 +350,129 @@ function formatDate(date, includeTime = false) {
 }
 
 function toCurrency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0));
+  return formatCurrency(value);
+}
+
+function resetPaymentForm() {
+  editingPaymentId.value = null;
+  paymentForm.amount = '';
+  paymentForm.payment_date = new Date().toISOString().slice(0, 10);
+  paymentForm.payment_method = 'cash';
+  paymentForm.notes = '';
+  paymentForm.attachment = null;
+  paymentForm.existing_attachment = null;
+  paymentForm.remove_attachment = false;
+  if (paymentAttachmentInput.value) {
+    paymentAttachmentInput.value.value = '';
+  }
+}
+
+function openPaymentModal(payment = null) {
+  if (payment) {
+    startEditPayment(payment);
+  } else {
+    resetPaymentForm();
+  }
+
+  showPaymentModal.value = true;
+}
+
+function closePaymentModal() {
+  showPaymentModal.value = false;
+  resetPaymentForm();
+}
+
+function onPaymentAttachment(event) {
+  paymentForm.attachment = event.target.files?.[0] || null;
+  if (paymentForm.attachment) {
+    paymentForm.remove_attachment = false;
+  }
+}
+
+function startEditPayment(payment) {
+  editingPaymentId.value = payment.id;
+  paymentForm.amount = Number(payment.amount || 0);
+  paymentForm.payment_date = payment.payment_date ? new Date(payment.payment_date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+  paymentForm.payment_method = payment.payment_method || 'cash';
+  paymentForm.notes = payment.notes || '';
+  paymentForm.attachment = null;
+  paymentForm.existing_attachment = payment.attachment_path || null;
+  paymentForm.remove_attachment = false;
+  if (paymentAttachmentInput.value) {
+    paymentAttachmentInput.value.value = '';
+  }
+  showPaymentModal.value = true;
+}
+
+async function refreshCustomerProfile() {
+  await store.fetchCustomer(route.params.id);
+}
+
+async function savePayment() {
+  if (!customer.value?.id) return;
+
+  savingPayment.value = true;
+  try {
+    const formData = new FormData();
+    formData.append('customer_id', customer.value.id);
+    formData.append('amount', paymentForm.amount);
+    formData.append('payment_date', paymentForm.payment_date);
+    formData.append('payment_method', paymentForm.payment_method || 'cash');
+    formData.append('notes', paymentForm.notes || '');
+    formData.append('remove_attachment', paymentForm.remove_attachment ? '1' : '0');
+    if (paymentForm.attachment) {
+      formData.append('attachment', paymentForm.attachment);
+    }
+
+    let response;
+    if (editingPaymentId.value) {
+      formData.append('_method', 'PUT');
+      response = await axios.post(`/advance-payments/${editingPaymentId.value}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    } else {
+      response = await axios.post('/advance-payments', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    }
+
+    await refreshCustomerProfile();
+    success(editingPaymentId.value ? 'Payment updated successfully.' : 'Payment added successfully.');
+
+    if (!editingPaymentId.value && response?.data) {
+      receiptModal.value?.open(response.data, 'receipt');
+    }
+
+    closePaymentModal();
+  } catch (e) {
+    error(e.response?.data?.message || 'Failed to save payment. Please try again.');
+  } finally {
+    savingPayment.value = false;
+  }
+}
+
+async function deletePayment(payment) {
+  if (!payment?.id) return;
+  if (!window.confirm(`Delete receipt ${payment.receipt_number || payment.id}?`)) return;
+
+  try {
+    await axios.delete(`/advance-payments/${payment.id}`);
+    await refreshCustomerProfile();
+    success('Payment deleted successfully.');
+    if (editingPaymentId.value === payment.id) {
+      resetPaymentForm();
+    }
+  } catch (e) {
+    error(e.response?.data?.message || 'Failed to delete payment. Please try again.');
+  }
+}
+
+function openReceipt(payment) {
+  receiptModal.value?.open(payment, 'receipt');
+}
+
+function openInvoice(payment) {
+  receiptModal.value?.open(payment, 'invoice');
 }
 
 function openQuoteModal() {

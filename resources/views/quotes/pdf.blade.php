@@ -157,8 +157,8 @@
                     <tr>
                         <td>{{ $item->item_name }}</td>
                         <td class="qty-align">{{ $item->quantity }}</td>
-                        <td class="currency">${{ number_format($item->unit_price, 2) }}</td>
-                        <td class="currency"><strong>${{ number_format($item->line_total, 2) }}</strong></td>
+                        <td class="currency">LKR {{ number_format($item->unit_price, 2) }}</td>
+                        <td class="currency"><strong>LKR {{ number_format($item->line_total, 2) }}</strong></td>
                     </tr>
                 @empty
                     <tr>
@@ -172,20 +172,20 @@
         <div class="totals-section">
             <div class="total-row">
                 <span>Subtotal:</span>
-                <span>${{ number_format($quotation->subtotal, 2) }}</span>
+                <span>LKR {{ number_format($quotation->subtotal, 2) }}</span>
             </div>
             <div class="total-row">
                 <span>Discount ({{ $quotation->discount_rate }}%):</span>
-                <span>-${{ number_format($quotation->subtotal * ($quotation->discount_rate / 100), 2) }}</span>
+                <span>-LKR {{ number_format($quotation->subtotal * ($quotation->discount_rate / 100), 2) }}</span>
             </div>
             <div class="total-row final">
                 <span>Net Total:</span>
-                <span>${{ number_format($quotation->final_total, 2) }}</span>
+                <span>LKR {{ number_format($quotation->final_total, 2) }}</span>
             </div>
             @if ($quotation->commission_amount > 0)
                 <div class="total-row" style="margin-top: 10px; font-size: 10px;">
                     <span>Commission ({{ $quotation->commission_rate }}%):</span>
-                    <span>${{ number_format($quotation->commission_amount, 2) }}</span>
+                    <span>LKR {{ number_format($quotation->commission_amount, 2) }}</span>
                 </div>
             @endif
         </div>

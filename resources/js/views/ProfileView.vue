@@ -51,7 +51,7 @@
 
       <div class="card">
         <h3 class="font-semibold text-base md:text-lg text-gray-700 mb-3 md:mb-4">App Info</h3>
-        <p class="text-xs md:text-sm text-gray-500 font-medium">Lumac Money v1.0</p>
+        <p class="text-xs md:text-sm text-gray-500 font-medium">LUMAC v1.0</p>
         <p class="text-xs md:text-sm text-gray-400 mt-2">Your personal income & expense tracker</p>
         <router-link
           v-if="auth.isAdmin"

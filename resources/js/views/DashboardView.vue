@@ -91,6 +91,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/vue/24/solid';
 import TransactionItem from '../components/TransactionItem.vue';
+import { formatCurrency as formatLkrCurrency } from '../utils/currency';
 
 const auth = useAuthStore();
 const summary = ref({});
@@ -111,7 +112,7 @@ const greeting = computed(() => {
 });
 
 function formatCurrency(val) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
+  return formatLkrCurrency(val);
 }
 
 function expensePercent(amount) {

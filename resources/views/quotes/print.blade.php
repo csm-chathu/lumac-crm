@@ -43,17 +43,17 @@
             <tr>
                 <td>{{ $item->item_name }}</td>
                 <td>{{ $item->quantity }}</td>
-                <td>{{ number_format((float) $item->unit_price, 2) }}</td>
-                <td>{{ number_format((float) $item->line_total, 2) }}</td>
+                <td>LKR {{ number_format((float) $item->unit_price, 2) }}</td>
+                <td>LKR {{ number_format((float) $item->line_total, 2) }}</td>
             </tr>
         @endforeach
         </tbody>
     </table>
 
     <div class="totals">
-        <p>Subtotal: {{ number_format((float) $quotation->subtotal, 2) }}</p>
-        <p>Discount ({{ number_format((float) $quotation->discount_rate, 2) }}%): -{{ number_format((float) $quotation->subtotal * ((float) $quotation->discount_rate / 100), 2) }}</p>
-        <h2>Final Total: {{ number_format((float) $quotation->final_total, 2) }}</h2>
+        <p>Subtotal: LKR {{ number_format((float) $quotation->subtotal, 2) }}</p>
+        <p>Discount ({{ number_format((float) $quotation->discount_rate, 2) }}%): -LKR {{ number_format((float) $quotation->subtotal * ((float) $quotation->discount_rate / 100), 2) }}</p>
+        <h2>Final Total: LKR {{ number_format((float) $quotation->final_total, 2) }}</h2>
     </div>
 </div>
 </body>

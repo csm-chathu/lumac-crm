@@ -93,12 +93,6 @@ const routes = [
                 alias: 'admin/solutions',
             },
             {
-                path: 'admin/agents',
-                name: 'admin-agents',
-                component: () => import('./views/AdminAgentsView.vue'),
-                meta: { requiresAdmin: true },
-            },
-            {
                 path: 'transactions',
                 name: 'transactions',
                 component: () => import('./views/TransactionsView.vue'),

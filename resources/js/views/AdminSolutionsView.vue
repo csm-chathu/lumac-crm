@@ -134,6 +134,7 @@ import { onMounted, reactive, ref, computed, watch } from 'vue';
 import { useAdminSolutionsStore } from '../stores/adminSolutions';
 import { useToast } from '../composables/useToast';
 import { useSearch } from '../composables/useSearch';
+import { formatCurrency } from '../utils/currency';
 
 const store = useAdminSolutionsStore();
 const { success, error } = useToast();
@@ -184,7 +185,7 @@ function resetFilters() {
 }
 
 function toCurrency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0));
+  return formatCurrency(value);
 }
 
 function ensureFeatureForm(solutionId) {

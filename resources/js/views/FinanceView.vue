@@ -112,6 +112,7 @@
 import { onMounted, reactive, ref, computed } from 'vue';
 import { useCustomersStore } from '../stores/customers';
 import { useToast } from '../composables/useToast';
+import { formatCurrency } from '../utils/currency';
 
 const customersStore = useCustomersStore();
 const { success, error } = useToast();
@@ -165,7 +166,7 @@ const filteredPayments = computed(() => {
 });
 
 function toCurrency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0));
+  return formatCurrency(value);
 }
 
 function onExpenseReceipt(event) {

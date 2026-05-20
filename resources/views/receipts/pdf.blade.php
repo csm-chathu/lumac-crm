@@ -141,7 +141,7 @@
         <!-- Amount -->
         <div class="amount-box">
             <div class="label">Amount Received</div>
-            <div class="value">${{ number_format($payment->amount, 2) }}</div>
+            <div class="value">LKR {{ number_format($payment->amount, 2) }}</div>
         </div>
 
         <!-- Notes -->

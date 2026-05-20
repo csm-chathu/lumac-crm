@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdvancePayment;
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdvancePaymentController extends Controller
@@ -27,17 +28,9 @@ class AdvancePaymentController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'amount' => 'required|numeric|min:0.01',
-            'payment_date' => 'required|date',
-            'payment_method' => 'nullable|string|max:100',
-            'notes' => 'nullable|string|max:2000',
-            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
-        ]);
+        $data = $this->validatePayload($request);
 
-        $customer = Customer::query()->findOrFail($data['customer_id']);
-        abort_if(!$request->user()->is_admin && $customer->user_id !== $request->user()->id, 403);
+        $customer = $this->resolveCustomerForMutation($request, $data['customer_id']);
 
         $path = null;
         if ($request->hasFile('attachment')) {
@@ -56,6 +49,52 @@ class AdvancePaymentController extends Controller
         ]);
 
         return response()->json($payment->load(['customer', 'user']), 201);
+    }
+
+    public function update(Request $request, AdvancePayment $advancePayment)
+    {
+        $this->authorizeMutation($request, $advancePayment);
+
+        $data = $this->validatePayload($request);
+        $customer = $this->resolveCustomerForMutation($request, $data['customer_id']);
+
+        $path = $advancePayment->attachment_path;
+        if ($request->hasFile('attachment')) {
+            if ($path) {
+                Storage::disk('public')->delete($path);
+            }
+
+            $path = $request->file('attachment')->store('advance-payments', 'public');
+        }
+
+        if ($request->boolean('remove_attachment') && $path) {
+            Storage::disk('public')->delete($path);
+            $path = null;
+        }
+
+        $advancePayment->update([
+            'customer_id' => $customer->id,
+            'amount' => $data['amount'],
+            'payment_date' => $data['payment_date'],
+            'payment_method' => $data['payment_method'] ?? 'cash',
+            'notes' => $data['notes'] ?? null,
+            'attachment_path' => $path,
+        ]);
+
+        return response()->json($advancePayment->fresh()->load(['customer', 'user']));
+    }
+
+    public function destroy(Request $request, AdvancePayment $advancePayment)
+    {
+        $this->authorizeMutation($request, $advancePayment);
+
+        if ($advancePayment->attachment_path) {
+            Storage::disk('public')->delete($advancePayment->attachment_path);
+        }
+
+        $advancePayment->delete();
+
+        return response()->noContent();
     }
 
     public function receipt(Request $request, AdvancePayment $advancePayment)
@@ -129,5 +168,37 @@ class AdvancePaymentController extends Controller
         );
 
         return $customer;
+    }
+
+    private function authorizeMutation(Request $request, AdvancePayment $advancePayment): Customer
+    {
+        $customer = $advancePayment->customer;
+        abort_if(
+            ! $request->user()->is_admin && $advancePayment->user_id !== $request->user()->id,
+            403
+        );
+
+        return $customer;
+    }
+
+    private function resolveCustomerForMutation(Request $request, int|string $customerId): Customer
+    {
+        $customer = Customer::query()->findOrFail($customerId);
+        abort_if(! $request->user()->is_admin && $customer->user_id !== $request->user()->id, 403);
+
+        return $customer;
+    }
+
+    private function validatePayload(Request $request): array
+    {
+        return $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'amount' => 'required|numeric|min:0.01',
+            'payment_date' => 'required|date',
+            'payment_method' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:2000',
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'remove_attachment' => 'nullable|boolean',
+        ]);
     }
 }
