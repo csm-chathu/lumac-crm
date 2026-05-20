@@ -3,19 +3,25 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 
 class CloudinaryController extends Controller
 {
-    public function getSignature(Request $request)
+    public function getSignature(Request $request): JsonResponse
     {
         $timestamp = now()->unix();
-        $folder = env('CLOUDINARY_FOLDER', 'jewellery');
-        $cloudName = env('CLOUDINARY_CLOUD_NAME');
-        $apiKey = env('CLOUDINARY_API_KEY');
-        $apiSecret = env('CLOUDINARY_API_SECRET');
+        $folder = config('services.cloudinary.folder', 'jewellery');
+        $cloudName = config('services.cloudinary.cloud_name');
+        $apiKey = config('services.cloudinary.api_key');
+        $apiSecret = config('services.cloudinary.api_secret');
 
-        // Build the string to sign
+        if (! $cloudName || ! $apiKey || ! $apiSecret) {
+            return response()->json([
+                'message' => 'Cloudinary is not configured.',
+            ], 500);
+        }
+
         $stringToSign = "folder={$folder}&timestamp={$timestamp}" . $apiSecret;
         $signature = hash('sha1', $stringToSign);
 

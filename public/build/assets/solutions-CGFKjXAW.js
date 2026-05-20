@@ -1,1 +1,0 @@
-import{i as a,l as e}from"./app-widUkANZ.js";const u=a("solutions",()=>{const t=e([]),o=e(!1);async function n(){o.value=!0;try{const{data:s}=await axios.get("/solutions");return t.value=s,s}finally{o.value=!1}}return{solutions:t,loading:o,fetchSolutions:n}});export{u};

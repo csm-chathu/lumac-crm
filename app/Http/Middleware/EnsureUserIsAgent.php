@@ -10,7 +10,14 @@ class EnsureUserIsAgent
 {
     public function handle(Request $request, Closure $next): Response
     {
-        abort_unless($request->user() && $request->user()->role === 'agent', 403);
+        abort_unless(
+            $request->user() && (
+                $request->user()->role === 'agent' ||
+                $request->user()->is_admin ||
+                $request->user()->role === 'admin'
+            ),
+            403
+        );
 
         return $next($request);
     }

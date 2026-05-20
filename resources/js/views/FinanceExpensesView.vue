@@ -68,7 +68,7 @@
           </thead>
           <tbody>
             <tr v-for="expense in filteredExpenses" :key="expense.id" class="border-b border-gray-100 text-gray-700">
-              <td class="py-3 pr-4 whitespace-nowrap">{{ expense.expense_date }}</td>
+              <td class="py-3 pr-4 whitespace-nowrap">{{ formatExpenseDate(expense.expense_date) }}</td>
               <td class="py-3 pr-4">{{ expense.category }}</td>
               <td class="py-3 pr-4 font-semibold">{{ toCurrency(expense.amount) }}</td>
               <td class="py-3 pr-4 max-w-xs truncate" :title="expense.notes || 'N/A'">{{ expense.notes || 'N/A' }}</td>
@@ -133,6 +133,17 @@ function toCurrency(value) {
 
 function receiptUrl(path) {
   return `/storage/${path}`;
+}
+
+function formatExpenseDate(value) {
+  if (!value) return 'N/A';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value).slice(0, 10);
+  }
+
+  return date.toISOString().slice(0, 10);
 }
 
 function resetExpenseForm() {

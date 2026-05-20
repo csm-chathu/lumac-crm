@@ -148,7 +148,8 @@ async function createPayment() {
 
     success('Advance payment logged successfully!');
     if (autoIssueInvoice.value && data?.id) {
-      receiptModal.value?.open(data, 'invoice');
+      const selectedCustomer = customersStore.customers.find((customer) => Number(customer.id) === Number(paymentForm.customer_id));
+      receiptModal.value?.open(data, 'invoice', selectedCustomer || null);
     }
     paymentForm.customer_id = '';
     paymentForm.amount = '';
@@ -165,11 +166,11 @@ async function createPayment() {
 }
 
 function openReceipt(payment) {
-  receiptModal.value?.open(payment, 'receipt');
+  receiptModal.value?.open(payment, 'receipt', payment.customer || null);
 }
 
 function openInvoice(payment) {
-  receiptModal.value?.open(payment, 'invoice');
+  receiptModal.value?.open(payment, 'invoice', payment.customer || null);
 }
 
 onMounted(async () => {

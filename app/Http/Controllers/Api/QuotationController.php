@@ -28,7 +28,7 @@ class QuotationController extends Controller
             'customer_id' => 'required|exists:customers,id',
             'discount_rate' => 'nullable|numeric|min:0|max:100',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
-            'status' => 'nullable|in:draft,issued,revoked',
+            'status' => 'nullable|in:draft,issued,agreed,revoked',
             'notes' => 'nullable|string|max:2000',
             'items' => 'required|array|min:1',
             'items.*.solution_id' => 'nullable|exists:solutions,id',
@@ -114,6 +114,49 @@ class QuotationController extends Controller
         });
 
         return response()->json($quote->load(['customer', 'items.solution', 'auditLogs']), 201);
+    }
+
+    public function updateStatus(Request $request, Quotation $quotation)
+    {
+        abort_if($quotation->user_id !== $request->user()->id && ! $request->user()->is_admin, 403);
+
+        $data = $request->validate([
+            'status' => 'required|in:draft,issued,agreed,revoked',
+        ]);
+
+        $previousStatus = $quotation->status;
+        $newStatus = $data['status'];
+
+        if ($previousStatus === $newStatus) {
+            return response()->json($quotation->load(['customer', 'items.solution']));
+        }
+
+        $customer = $quotation->customer;
+
+        // Only 'agreed' adds to contract value; leaving 'agreed' deducts it.
+        if ($newStatus === 'agreed' && $previousStatus !== 'agreed') {
+            $customer->increment('contract_value', (float) $quotation->final_total);
+        } elseif ($previousStatus === 'agreed' && $newStatus !== 'agreed') {
+            $customer->decrement('contract_value', (float) $quotation->final_total);
+        }
+
+        $quotation->update([
+            'status' => $newStatus,
+            'issued_at' => $newStatus === 'issued' ? now() : $quotation->issued_at,
+            'revoked_at' => $newStatus === 'revoked' ? now() : null,
+        ]);
+
+        $quotation->auditLogs()->create([
+            'user_id' => $request->user()->id,
+            'action' => $newStatus,
+            'remarks' => "Status changed from {$previousStatus} to {$newStatus}.",
+            'meta' => [
+                'previous_status' => $previousStatus,
+                'final_total' => $quotation->final_total,
+            ],
+        ]);
+
+        return response()->json($quotation->load(['customer', 'items.solution']));
     }
 
     public function show(Request $request, Quotation $quotation)

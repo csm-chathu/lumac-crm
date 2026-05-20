@@ -23,30 +23,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { getNavItemsForRole } from '../navigation/navItems';
 
-import {
-  HomeIcon,
-  Squares2X2Icon,
-  UserGroupIcon,
-  IdentificationIcon,
-  BanknotesIcon,
-  CurrencyDollarIcon,
-  ArrowsRightLeftIcon,
-  UserCircleIcon,
-  RectangleGroupIcon,
-  BookOpenIcon,
-} from '@heroicons/vue/24/outline';
-
-const menuTiles = [
-  { label: 'Admin Home', description: 'Main board', to: '/admin/dashboard', icon: HomeIcon },
-  { label: 'Solutions', description: 'Catalog setup', to: '/master-data/solutions', icon: Squares2X2Icon },
-  { label: 'Catalog', description: 'Solution catalog', to: '/master-data/catalog', icon: BookOpenIcon },
-  { label: 'Agents', description: 'Agent directory', to: '/admin/agents', icon: IdentificationIcon },
-  { label: 'Customers', description: 'Client records', to: '/customers', icon: UserGroupIcon },
-  { label: 'Expenses', description: 'Cost control', to: '/finance/expenses', icon: CurrencyDollarIcon },
-  { label: 'Payments', description: 'Advance receipts', to: '/finance/payments', icon: BanknotesIcon },
-  { label: 'Devices', description: 'Quotation hardware', to: '/devices', icon: RectangleGroupIcon },
-  { label: 'Transactions', description: 'Cashflow', to: '/transactions', icon: ArrowsRightLeftIcon },
-  { label: 'Profile', description: 'Admin account', to: '/profile', icon: UserCircleIcon },
-];
+const menuTiles = computed(() => getNavItemsForRole({ isAdmin: true, isCustomer: false }));
 </script>

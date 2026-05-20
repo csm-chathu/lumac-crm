@@ -1,19 +1,16 @@
 <template>
-  <div class="min-h-screen flex flex-col justify-center bg-gradient-to-b from-primary-600 to-primary-800 px-4 md:px-6 py-8 md:py-10">
+  <div class="min-h-screen flex flex-col justify-center items-center bg-[#0b1220] px-4 md:px-6 py-8 md:py-10">
     <!-- Logo / Header -->
     <div class="text-center mb-8 md:mb-12">
-      <div class="w-16 h-16 md:w-20 md:h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-        <span class="text-4xl md:text-5xl">💰</span>
-      </div>
-      <h1 class="text-3xl md:text-4xl font-bold text-white">LUMAC</h1>
-      <p class="text-primary-200 mt-2 text-sm md:text-base">Your personal finance tracker</p>
+      <span class="inline-block font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-widest drop-shadow-lg select-none">
+        <span class="text-white">LU</span><span class="text-sky-300">MAC</span>
+      </span>
     </div>
 
-    <!-- Form Card -->
-    <div class="max-w-md w-full mx-auto bg-white rounded-3xl p-6 md:p-8 shadow-xl">
-      <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6 md:mb-8">Welcome back 👋</h2>
-
-      <form @submit.prevent="handleLogin" class="space-y-4 md:space-y-5">
+    <!-- Form Card with gradient border -->
+    <div class="max-w-md w-full mx-auto rounded-3xl p-0.5 bg-gradient-to-br from-sky-400 via-sky-300 to-blue-900 shadow-2xl">
+      <div class="bg-white bg-opacity-90 rounded-[inherit] p-6 md:p-8 h-full w-full" style="box-shadow: 0 4px 32px 0 rgba(16,30,54,0.10) inset;">
+        <form @submit.prevent="handleLogin" class="space-y-4 md:space-y-5">
         <div>
           <label class="block text-xs md:text-sm font-medium text-gray-500 mb-2">Email</label>
           <input v-model="form.email" type="email" placeholder="your@email.com"
@@ -41,12 +38,8 @@
           <span v-if="loading">Signing in…</span>
           <span v-else>Sign In</span>
         </button>
-      </form>
-
-      <p class="text-center text-sm md:text-base text-gray-500 mt-6 md:mt-8">
-        Don't have an account?
-        <router-link to="/register" class="text-primary-600 font-semibold hover:text-primary-700">Sign Up</router-link>
-      </p>
+        </form>
+      </div>
     </div>
   </div>
 </template>

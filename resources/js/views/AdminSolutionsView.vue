@@ -10,11 +10,15 @@
         <router-link to="/admin/agents" class="btn-secondary px-4 py-2 text-sm md:text-base whitespace-nowrap">
           Agent Directory
         </router-link>
-        <button @click="openAddSolutionModal" class="btn-primary px-4 py-2 text-sm md:text-base md:w-auto whitespace-nowrap inline-flex items-center gap-1.5">
+        <button
+          type="button"
+          class="btn-primary px-4 py-2 text-sm md:text-base md:w-auto whitespace-nowrap inline-flex items-center gap-1.5"
+          @click="openAddSolutionModal"
+        >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m-7-7h14" />
           </svg>
-          <span>Add Solution</span>
+          <span>Add Catalog</span>
         </button>
       </div>
     </div>
@@ -43,6 +47,47 @@
             <option :value="false">Inactive</option>
           </select>
           <textarea v-model="solutionForm.description" rows="3" class="input-field md:col-span-2" placeholder="Description"></textarea>
+
+          <div class="md:col-span-2 space-y-2 border border-gray-100 rounded-xl p-4">
+            <label class="block text-sm font-semibold text-gray-800">Catalog Gallery Images</label>
+
+            <div v-if="solutionExistingImages.length" class="grid grid-cols-3 md:grid-cols-6 gap-2">
+              <div v-for="(img, index) in solutionExistingImages" :key="`existing-solution-${index}`" class="relative">
+                <img :src="img" alt="Solution image" class="w-full h-16 rounded-md border border-gray-200 object-cover" />
+                <button
+                  type="button"
+                  class="absolute -top-1 -right-1 bg-white border border-gray-200 rounded-full w-5 h-5 text-xs text-red-600"
+                  @click="removeExistingSolutionImage(index)"
+                >
+                  x
+                </button>
+              </div>
+            </div>
+
+            <input
+              ref="solutionImagesInput"
+              type="file"
+              accept="image/*"
+              multiple
+              class="input-field"
+              @change="onSolutionImagesSelect"
+            />
+
+            <div v-if="solutionImagePreviews.length" class="grid grid-cols-3 md:grid-cols-6 gap-2">
+              <div v-for="(preview, index) in solutionImagePreviews" :key="`new-solution-${index}`" class="relative">
+                <img :src="preview" alt="New solution image" class="w-full h-16 rounded-md border border-gray-200 object-cover" />
+                <button
+                  type="button"
+                  class="absolute -top-1 -right-1 bg-white border border-gray-200 rounded-full w-5 h-5 text-xs text-red-600"
+                  @click="removeSelectedSolutionImage(index)"
+                >
+                  x
+                </button>
+              </div>
+            </div>
+
+            <p v-if="solutionGalleryError" class="text-xs text-red-600">{{ solutionGalleryError }}</p>
+          </div>
 
           <div class="md:col-span-2 flex gap-3 justify-end border-t border-gray-100 pt-4">
             <button type="button" class="btn-secondary px-6 py-2" @click="closeSolutionModal">Cancel</button>
@@ -78,6 +123,26 @@
         <article v-for="solution in filteredSolutions" :key="solution.id" class="border border-gray-100 rounded-2xl p-4">
           <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
             <div>
+              <div v-if="solution.gallery_images?.length" class="mb-3">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <img
+                    v-for="(img, idx) in solution.gallery_images.slice(0, 6)"
+                    :key="`${solution.id}-gallery-${idx}`"
+                    :src="img"
+                    :alt="`${solution.name} image ${idx + 1}`"
+                    class="w-12 h-12 rounded-md border border-gray-200 object-cover cursor-pointer"
+                    @click="openSolutionGallery(solution, idx)"
+                  />
+                  <button
+                    v-if="solution.gallery_images.length > 6"
+                    type="button"
+                    class="text-xs text-gray-500 font-medium hover:text-gray-700"
+                    @click="openSolutionGallery(solution, 6)"
+                  >
+                    +{{ solution.gallery_images.length - 6 }}
+                  </button>
+                </div>
+              </div>
               <div class="flex items-center gap-2">
                 <h3 class="font-semibold text-gray-800">{{ solution.name }}</h3>
                 <span
@@ -97,40 +162,116 @@
           </div>
 
           <div class="mt-4">
-            <h4 class="font-medium text-sm text-gray-700 mb-2">Feature Checklist</h4>
-            <div v-if="solution.features?.length" class="space-y-2">
-              <div v-for="feature in solution.features" :key="feature.id" class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border border-gray-100 rounded-xl p-3">
-                <div>
-                  <p class="text-sm font-medium text-gray-800">{{ feature.label }}</p>
-                  <p class="text-xs text-gray-500">{{ feature.description || 'No description' }}</p>
+            <button
+              class="flex items-center gap-2 font-medium text-sm text-gray-700 mb-2 focus:outline-none"
+              @click="toggleFeatureChecklist(solution.id)"
+              :aria-expanded="!!featureChecklistOpen[solution.id]"
+              :aria-controls="`feature-checklist-${solution.id}`"
+              type="button"
+            >
+              <svg :class="[!!featureChecklistOpen[solution.id] ? 'rotate-90' : '', 'transition-transform w-4 h-4']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+              Feature Checklist
+            </button>
+            <transition name="fade">
+              <div
+                v-show="!!featureChecklistOpen[solution.id]"
+                :id="`feature-checklist-${solution.id}`"
+                class="mt-2"
+              >
+                <div v-if="solution.features?.length" class="space-y-2">
+                  <div v-for="feature in solution.features" :key="feature.id" class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border border-gray-100 rounded-xl p-3">
+                    <div>
+                      <p class="text-sm font-medium text-gray-800">{{ feature.label }}</p>
+                      <p class="text-xs text-gray-500">{{ feature.description || 'No description' }}</p>
+                    </div>
+                    <div class="flex gap-2">
+                      <button class="text-xs font-semibold text-primary-700" @click="startEditFeature(solution.id, feature)">Edit</button>
+                      <button class="text-xs font-semibold text-red-600" @click="removeFeature(solution.id, feature.id)">Delete</button>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex gap-2">
-                  <button class="text-xs font-semibold text-primary-700" @click="startEditFeature(solution.id, feature)">Edit</button>
-                  <button class="text-xs font-semibold text-red-600" @click="removeFeature(solution.id, feature.id)">Delete</button>
-                </div>
-              </div>
-            </div>
-            <p v-else class="text-xs text-gray-500">No features yet.</p>
+                <p v-else class="text-xs text-gray-500">No features yet.</p>
 
-            <form class="grid grid-cols-1 md:grid-cols-4 gap-2 mt-3" @submit.prevent="saveFeature(solution.id)">
-              <input v-model="featureForms[solution.id].feature_key" type="text" class="input-field" placeholder="feature_key" required />
-              <input v-model="featureForms[solution.id].label" type="text" class="input-field" placeholder="Feature label" required />
-              <input v-model="featureForms[solution.id].description" type="text" class="input-field" placeholder="Description" />
-              <div class="flex gap-2">
-                <button class="btn-primary px-4 py-2" :disabled="savingFeatureFor === solution.id">{{ savingFeatureFor === solution.id ? 'Saving...' : (featureForms[solution.id].editingId ? 'Update' : 'Add') }}</button>
-                <button v-if="featureForms[solution.id].editingId" type="button" class="btn-secondary px-4 py-2" @click="resetFeatureForm(solution.id)">Cancel</button>
+                <form class="grid grid-cols-1 md:grid-cols-4 gap-2 mt-3" @submit.prevent="saveFeature(solution.id)">
+                  <input v-model="featureForms[solution.id].feature_key" type="text" class="input-field" placeholder="feature_key" required />
+                  <input v-model="featureForms[solution.id].label" type="text" class="input-field" placeholder="Feature label" required />
+                  <input v-model="featureForms[solution.id].description" type="text" class="input-field" placeholder="Description" />
+                  <div class="flex gap-2">
+                    <button class="btn-primary px-4 py-2" :disabled="savingFeatureFor === solution.id">{{ savingFeatureFor === solution.id ? 'Saving...' : (featureForms[solution.id].editingId ? 'Update' : 'Add') }}</button>
+                    <button v-if="featureForms[solution.id].editingId" type="button" class="btn-secondary px-4 py-2" @click="resetFeatureForm(solution.id)">Cancel</button>
+                  </div>
+                </form>
               </div>
-            </form>
+            </transition>
           </div>
+        // Accordion state for feature checklist
+        const featureChecklistOpen = reactive({});
+
+        function toggleFeatureChecklist(solutionId) {
+          featureChecklistOpen[solutionId] = !featureChecklistOpen[solutionId];
+        }
+
+        // Open the first checklist by default (optional, can be removed if all should be collapsed)
+        watch(
+          () => filteredSolutions.value,
+          (solutions) => {
+            for (const s of solutions) {
+              if (!(s.id in featureChecklistOpen)) {
+                featureChecklistOpen[s.id] = false;
+              }
+            }
+          },
+          { immediate: true }
+        );
         </article>
       </div>
       <p v-else class="text-sm text-gray-500">No solutions yet.</p>
     </section>
+
+    <div v-if="showSolutionGalleryModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" @click.self="closeSolutionGallery">
+      <div class="bg-white rounded-2xl w-full max-w-4xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h3 class="text-sm md:text-base font-semibold text-gray-800 truncate">{{ solutionGalleryTitle }} Gallery</h3>
+          <button type="button" class="text-gray-400 hover:text-gray-600" @click="closeSolutionGallery" aria-label="Close gallery">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <div class="bg-gray-900 rounded-xl overflow-hidden h-[52vh] flex items-center justify-center">
+            <img v-if="currentSolutionGalleryImage" :src="currentSolutionGalleryImage" :alt="`${solutionGalleryTitle} preview`" class="max-w-full max-h-full object-contain" />
+          </div>
+
+          <div class="flex items-center justify-between gap-2">
+            <button type="button" class="btn-secondary px-4 py-2 md:w-auto" @click="prevSolutionGalleryImage" :disabled="solutionGalleryImages.length <= 1">Previous</button>
+            <p class="text-xs md:text-sm text-gray-600">{{ solutionGalleryIndex + 1 }} / {{ solutionGalleryImages.length }}</p>
+            <button type="button" class="btn-secondary px-4 py-2 md:w-auto" @click="nextSolutionGalleryImage" :disabled="solutionGalleryImages.length <= 1">Next</button>
+          </div>
+
+          <div v-if="solutionGalleryImages.length > 1" class="grid grid-cols-6 md:grid-cols-10 gap-2">
+            <button
+              v-for="(img, idx) in solutionGalleryImages"
+              :key="`solution-gallery-thumb-${idx}`"
+              type="button"
+              class="rounded-md overflow-hidden border-2"
+              :class="idx === solutionGalleryIndex ? 'border-primary-500' : 'border-transparent'"
+              @click="solutionGalleryIndex = idx"
+            >
+              <img :src="img" :alt="`Gallery thumbnail ${idx + 1}`" class="w-full h-12 object-cover" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref, computed, watch } from 'vue';
+import { onBeforeUnmount, onMounted, reactive, ref, computed, watch } from 'vue';
 import { useAdminSolutionsStore } from '../stores/adminSolutions';
 import { useToast } from '../composables/useToast';
 import { useSearch } from '../composables/useSearch';
@@ -145,6 +286,15 @@ const featureForms = reactive({});
 const filterStatus = ref('');
 const searchQuery = ref('');
 const showAddSolutionModal = ref(false);
+const solutionImagesInput = ref(null);
+const solutionImageFiles = ref([]);
+const solutionImagePreviews = ref([]);
+const solutionExistingImages = ref([]);
+const solutionGalleryError = ref('');
+const showSolutionGalleryModal = ref(false);
+const solutionGalleryImages = ref([]);
+const solutionGalleryIndex = ref(0);
+const solutionGalleryTitle = ref('Solution');
 
 const solutionForm = reactive({
   name: '',
@@ -210,6 +360,14 @@ function resetSolutionForm() {
   solutionForm.demo_email = '';
   solutionForm.demo_password = '';
   solutionForm.is_active = true;
+  solutionExistingImages.value = [];
+  solutionImageFiles.value = [];
+  solutionImagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
+  solutionImagePreviews.value = [];
+  solutionGalleryError.value = '';
+  if (solutionImagesInput.value) {
+    solutionImagesInput.value.value = '';
+  }
 }
 
 function openAddSolutionModal() {
@@ -241,7 +399,117 @@ function startEditSolution(solution) {
   solutionForm.demo_email = solution.demo_email || '';
   solutionForm.demo_password = solution.demo_password || '';
   solutionForm.is_active = !!solution.is_active;
+  solutionExistingImages.value = Array.isArray(solution.gallery_images) ? [...solution.gallery_images] : [];
+  solutionImageFiles.value = [];
+  solutionImagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
+  solutionImagePreviews.value = [];
+  solutionGalleryError.value = '';
+  if (solutionImagesInput.value) {
+    solutionImagesInput.value.value = '';
+  }
   showAddSolutionModal.value = true;
+}
+
+function onSolutionImagesSelect(event) {
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
+
+  solutionGalleryError.value = '';
+  const validFiles = [];
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) {
+      solutionGalleryError.value = 'Only image files are allowed.';
+      continue;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      solutionGalleryError.value = 'Each image must be smaller than 5MB.';
+      continue;
+    }
+    validFiles.push(file);
+  }
+
+  if (!validFiles.length) {
+    event.target.value = '';
+    return;
+  }
+
+  solutionImageFiles.value = [...solutionImageFiles.value, ...validFiles].slice(0, 12);
+  solutionImagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
+  solutionImagePreviews.value = solutionImageFiles.value.map((file) => URL.createObjectURL(file));
+  event.target.value = '';
+}
+
+function removeSelectedSolutionImage(index) {
+  solutionImageFiles.value.splice(index, 1);
+  solutionImagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
+  solutionImagePreviews.value = solutionImageFiles.value.map((file) => URL.createObjectURL(file));
+}
+
+function removeExistingSolutionImage(index) {
+  solutionExistingImages.value.splice(index, 1);
+}
+
+function openSolutionGallery(solution, startIndex = 0) {
+  const images = Array.isArray(solution?.gallery_images) ? solution.gallery_images : [];
+  if (!images.length) return;
+
+  solutionGalleryImages.value = images;
+  solutionGalleryTitle.value = solution?.name || 'Solution';
+  solutionGalleryIndex.value = Math.min(Math.max(startIndex, 0), images.length - 1);
+  showSolutionGalleryModal.value = true;
+}
+
+function closeSolutionGallery() {
+  showSolutionGalleryModal.value = false;
+  solutionGalleryImages.value = [];
+  solutionGalleryIndex.value = 0;
+  solutionGalleryTitle.value = 'Solution';
+}
+
+function prevSolutionGalleryImage() {
+  if (!solutionGalleryImages.value.length) return;
+  const total = solutionGalleryImages.value.length;
+  solutionGalleryIndex.value = (solutionGalleryIndex.value - 1 + total) % total;
+}
+
+function nextSolutionGalleryImage() {
+  if (!solutionGalleryImages.value.length) return;
+  const total = solutionGalleryImages.value.length;
+  solutionGalleryIndex.value = (solutionGalleryIndex.value + 1) % total;
+}
+
+const currentSolutionGalleryImage = computed(() => {
+  if (!solutionGalleryImages.value.length) return '';
+  return solutionGalleryImages.value[solutionGalleryIndex.value] || '';
+});
+
+async function uploadSolutionImages(files) {
+  const sigResponse = await axios.get('/cloudinary/signature');
+  const { signature, timestamp, api_key, cloud_name, folder } = sigResponse.data;
+
+  const uploads = files.map(async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('api_key', api_key);
+    formData.append('timestamp', timestamp);
+    formData.append('signature', signature);
+    formData.append('folder', folder);
+
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Image upload failed');
+    }
+
+    const data = await response.json();
+    return data.secure_url;
+  });
+
+  return Promise.all(uploads);
 }
 
 function startEditFeature(solutionId, feature) {
@@ -255,7 +523,13 @@ function startEditFeature(solutionId, feature) {
 
 async function saveSolution() {
   savingSolution.value = true;
+  solutionGalleryError.value = '';
   try {
+    const uploadedImages = solutionImageFiles.value.length
+      ? await uploadSolutionImages(solutionImageFiles.value)
+      : [];
+    const galleryImages = [...solutionExistingImages.value, ...uploadedImages];
+
     const payload = {
       name: solutionForm.name,
       description: solutionForm.description || null,
@@ -264,6 +538,7 @@ async function saveSolution() {
       demo_username: solutionForm.demo_username || null,
       demo_email: solutionForm.demo_email || null,
       demo_password: solutionForm.demo_password || null,
+      gallery_images: galleryImages,
       is_active: !!solutionForm.is_active,
     };
 
@@ -279,6 +554,9 @@ async function saveSolution() {
     await store.fetchSolutions();
     hydrateFeatureForms();
   } catch (e) {
+    if (e?.message?.toLowerCase()?.includes('image upload')) {
+      solutionGalleryError.value = e.message;
+    }
     error(e.response?.data?.message || 'Failed to save solution. Please try again.');
   } finally {
     savingSolution.value = false;
@@ -353,5 +631,9 @@ watch(
 onMounted(async () => {
   await store.fetchSolutions();
   hydrateFeatureForms();
+});
+
+onBeforeUnmount(() => {
+  solutionImagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
 });
 </script>

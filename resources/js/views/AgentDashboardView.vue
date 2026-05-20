@@ -23,25 +23,8 @@
 </template>
 
 <script setup>
-import {
-  HomeIcon,
-  UserGroupIcon,
-  ClipboardDocumentListIcon,
-  BanknotesIcon,
-  CurrencyDollarIcon,
-  ArrowsRightLeftIcon,
-  UserCircleIcon,
-  RectangleGroupIcon,
-} from '@heroicons/vue/24/outline';
+import { computed } from 'vue';
+import { getNavItemsForRole } from '../navigation/navItems';
 
-const menuTiles = [
-  { label: 'Dashboard', description: 'Overview', to: '/', icon: HomeIcon },
-  { label: 'Customers', description: 'Client list', to: '/customers', icon: UserGroupIcon },
-  { label: 'Quotations', description: 'Price offers', to: '/quotations', icon: ClipboardDocumentListIcon },
-  { label: 'Expenses', description: 'Cost tracking', to: '/finance/expenses', icon: CurrencyDollarIcon },
-  { label: 'Payments', description: 'Advance receipts', to: '/finance/payments', icon: BanknotesIcon },
-  { label: 'Devices', description: 'Quotation hardware', to: '/devices', icon: RectangleGroupIcon },
-  { label: 'Transactions', description: 'Ledger', to: '/transactions', icon: ArrowsRightLeftIcon },
-  { label: 'Profile', description: 'My account', to: '/profile', icon: UserCircleIcon },
-];
+const menuTiles = computed(() => getNavItemsForRole({ isAdmin: false, isCustomer: false }));
 </script>

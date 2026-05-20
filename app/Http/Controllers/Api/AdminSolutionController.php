@@ -26,6 +26,8 @@ class AdminSolutionController extends Controller
             'demo_username' => 'nullable|string|max:255',
             'demo_email' => 'nullable|email|max:255',
             'demo_password' => 'nullable|string|max:255',
+            'gallery_images' => 'nullable|array|max:12',
+            'gallery_images.*' => 'url|max:2048',
             'is_active' => 'boolean',
         ]);
 
@@ -48,6 +50,8 @@ class AdminSolutionController extends Controller
             'demo_username' => 'nullable|string|max:255',
             'demo_email' => 'nullable|email|max:255',
             'demo_password' => 'nullable|string|max:255',
+            'gallery_images' => 'nullable|array|max:12',
+            'gallery_images.*' => 'url|max:2048',
             'is_active' => 'boolean',
         ]);
 

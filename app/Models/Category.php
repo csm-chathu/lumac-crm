@@ -9,7 +9,11 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'name', 'type', 'icon', 'color'];
+    protected $fillable = ['user_id', 'name', 'type', 'icon', 'color', 'gallery_images'];
+
+    protected $casts = [
+        'gallery_images' => 'array',
+    ];
 
     public function user()
     {

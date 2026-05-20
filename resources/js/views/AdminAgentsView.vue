@@ -65,15 +65,34 @@
       <div v-else-if="filteredAgents.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         <article v-for="agent in filteredAgents" :key="agent.id" class="rounded-2xl border border-gray-100 p-4 bg-white">
           <div class="flex items-start justify-between gap-3">
-            <div>
-              <h3 class="font-semibold text-gray-800">{{ agent.name }}</h3>
-              <p class="text-sm text-gray-500">{{ agent.email }}</p>
+            <div class="flex items-start gap-3 min-w-0">
+              <div
+                class="h-11 w-11 shrink-0 rounded-full flex items-center justify-center text-sm font-semibold ring-1 ring-inset"
+                :class="getAgentAvatarClass(agent.name)"
+              >
+                {{ getAgentInitials(agent.name) }}
+              </div>
+              <div class="min-w-0">
+                <h3 class="font-semibold text-gray-800 truncate">{{ agent.name }}</h3>
+                <p class="text-sm text-gray-500 truncate">{{ agent.email }}</p>
+              </div>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-xs font-semibold px-2 py-0.5 rounded-full" :class="agent.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'">
                 {{ agent.is_active ? 'Active' : 'Inactive' }}
               </span>
-              <button type="button" class="text-xs font-semibold text-primary-700" @click="openAgentModal(agent)">Edit</button>
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-primary-700 hover:bg-primary-50"
+                title="Edit agent"
+                aria-label="Edit agent"
+                @click="openAgentModal(agent)"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h2m-6.586 13.414a2 2 0 010-2.828L14 8l2 2-7.414 7.414a2 2 0 01-1.414.586H5v-2.172a2 2 0 01.586-1.414z" />
+                </svg>
+                <span>Edit</span>
+              </button>
             </div>
           </div>
 
@@ -113,6 +132,36 @@ const agentForm = ref({
 
 function getAgentProfile(agent) {
   return agent?.agentProfile || agent?.agent_profile || null;
+}
+
+function getAgentInitials(name) {
+  const normalized = (name || '').trim();
+  if (!normalized) return 'AG';
+
+  const parts = normalized.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
+
+function getAgentAvatarClass(name) {
+  const palettes = [
+    'bg-sky-100 text-sky-700 ring-sky-200',
+    'bg-emerald-100 text-emerald-700 ring-emerald-200',
+    'bg-amber-100 text-amber-700 ring-amber-200',
+    'bg-rose-100 text-rose-700 ring-rose-200',
+    'bg-indigo-100 text-indigo-700 ring-indigo-200',
+  ];
+
+  const value = (name || '').trim();
+  if (!value) return palettes[0];
+
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash + value.charCodeAt(i) * (i + 1)) % palettes.length;
+  }
+  return palettes[hash];
 }
 
 const filteredAgents = computed(() => {

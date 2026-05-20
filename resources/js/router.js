@@ -29,19 +29,19 @@ const routes = [
                 path: 'customers',
                 name: 'customers',
                 component: () => import('./views/CustomersView.vue'),
-                meta: { requiresAgent: true },
+                meta: { requiresAgentOrAdmin: true },
             },
             {
                 path: 'customers/:id',
                 name: 'customer-profile',
                 component: () => import('./views/CustomerProfileView.vue'),
-                meta: { requiresAgent: true },
+                meta: { requiresAgentOrAdmin: true },
             },
             {
                 path: 'customers/:id/requirements',
                 name: 'customer-requirements',
                 component: () => import('./views/CustomerRequirementsView.vue'),
-                meta: { requiresAgent: true },
+                meta: { requiresAgentOrAdmin: true },
             },
             {
                 path: 'quotations',
@@ -91,6 +91,12 @@ const routes = [
                 component: () => import('./views/AdminSolutionsView.vue'),
                 meta: { requiresAdmin: true },
                 alias: 'admin/solutions',
+            },
+            {
+                path: 'admin/agents',
+                name: 'admin-agents',
+                component: () => import('./views/AdminAgentsView.vue'),
+                meta: { requiresAdmin: true },
             },
             {
                 path: 'transactions',

@@ -18,11 +18,13 @@ class Solution extends Model
         'demo_username',
         'demo_email',
         'demo_password',
+        'gallery_images',
         'is_active',
     ];
 
     protected $casts = [
         'base_price' => 'decimal:2',
+        'gallery_images' => 'array',
         'is_active' => 'boolean',
     ];
 

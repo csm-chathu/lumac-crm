@@ -17,10 +17,16 @@ export const useCategoryStore = defineStore('categories', () => {
         return data;
     }
 
+    async function updateCategory(id, payload) {
+        const { data } = await axios.put(`/categories/${id}`, payload);
+        categories.value = categories.value.map((c) => (c.id === id ? data : c));
+        return data;
+    }
+
     async function deleteCategory(id) {
         await axios.delete(`/categories/${id}`);
         categories.value = categories.value.filter(c => c.id !== id);
     }
 
-    return { categories, fetchCategories, createCategory, deleteCategory };
+    return { categories, fetchCategories, createCategory, updateCategory, deleteCategory };
 });

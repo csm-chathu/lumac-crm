@@ -23,11 +23,11 @@
 
         <button
           type="button"
-          class="inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-sky-300 transition-colors"
+          class="inline-flex items-center gap-2 text-white hover:text-sky-300 transition-colors"
           @click="goHome"
           aria-label="Go home"
         >
-          <span class="hidden sm:inline text-base md:text-lg tracking-wide">
+          <span class="hidden sm:inline font-extrabold text-2xl md:text-3xl lg:text-4xl tracking-widest drop-shadow-lg select-none">
             <span class="text-white">LU</span><span class="text-sky-300">MAC</span>
           </span>
         </button>
@@ -82,69 +82,20 @@
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import {
-  ArrowLeftIcon,
-  HomeIcon,
-  UserGroupIcon,
-  ListBulletIcon,
-  CircleStackIcon,
-  UserIcon,
-  DocumentTextIcon,
-  CurrencyDollarIcon,
-  ShieldCheckIcon,
-  RectangleGroupIcon,
-} from '@heroicons/vue/24/outline';
-import {
-  HomeIcon as HomeIconSolid,
-  UserGroupIcon as UserGroupIconSolid,
-  ListBulletIcon as ListBulletIconSolid,
-  CircleStackIcon as CircleStackIconSolid,
-  UserIcon as UserIconSolid,
-  DocumentTextIcon as DocumentTextIconSolid,
-  CurrencyDollarIcon as CurrencyDollarIconSolid,
-  ShieldCheckIcon as ShieldCheckIconSolid,
-  RectangleGroupIcon as RectangleGroupIconSolid,
-} from '@heroicons/vue/24/solid';
+import { ArrowLeftIcon, HomeIcon } from '@heroicons/vue/24/outline';
+import { getNavItemsForRole } from '../navigation/navItems';
 
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 
-const navItems = computed(() => {
-  if (auth.isAdmin) {
-    return [
-      { name: 'admin-dashboard', to: '/admin/dashboard', label: 'Admin', icon: ShieldCheckIcon, activeIcon: ShieldCheckIconSolid },
-      { name: 'master-data', to: '/master-data/solutions', label: 'Solutions', icon: CircleStackIcon, activeIcon: CircleStackIconSolid },
-      { name: 'finance-expenses', to: '/finance/expenses', label: 'Expenses', icon: CurrencyDollarIcon, activeIcon: CurrencyDollarIconSolid },
-      { name: 'finance-payments', to: '/finance/payments', label: 'Payments', icon: CurrencyDollarIcon, activeIcon: CurrencyDollarIconSolid },
-      { name: 'finance-agent-payments', to: '/finance/agent-payments', label: 'Agent Pay', icon: CurrencyDollarIcon, activeIcon: CurrencyDollarIconSolid },
-      { name: 'devices', to: '/devices', label: 'Devices', icon: RectangleGroupIcon, activeIcon: RectangleGroupIconSolid },
-      { name: 'profile', to: '/profile', label: 'Profile', icon: UserIcon, activeIcon: UserIconSolid },
-    ];
-  }
-
-  if (auth.isCustomer) {
-    return [
-      { name: 'client-portal', to: '/client/portal', label: 'Portal', icon: RectangleGroupIcon, activeIcon: RectangleGroupIconSolid },
-      { name: 'profile', to: '/profile', label: 'Profile', icon: UserIcon, activeIcon: UserIconSolid },
-    ];
-  }
-
-  return [
-    { name: 'dashboard', to: '/', label: 'Catalog', icon: HomeIcon, activeIcon: HomeIconSolid },
-    { name: 'customers', to: '/customers', label: 'Customers', icon: UserGroupIcon, activeIcon: UserGroupIconSolid },
-    { name: 'quotations', to: '/quotations', label: 'Quotes', icon: DocumentTextIcon, activeIcon: DocumentTextIconSolid },
-    { name: 'finance-expenses', to: '/finance/expenses', label: 'Expenses', icon: CurrencyDollarIcon, activeIcon: CurrencyDollarIconSolid },
-    { name: 'finance-payments', to: '/finance/payments', label: 'Payments', icon: CurrencyDollarIcon, activeIcon: CurrencyDollarIconSolid },
-    { name: 'finance-agent-payments', to: '/finance/agent-payments', label: 'Agent Pay', icon: CurrencyDollarIcon, activeIcon: CurrencyDollarIconSolid },
-    { name: 'transactions', to: '/transactions', label: 'History', icon: ListBulletIcon, activeIcon: ListBulletIconSolid },
-    { name: 'profile', to: '/profile', label: 'Profile', icon: UserIcon, activeIcon: UserIconSolid },
-  ];
-});
+const navItems = computed(() => getNavItemsForRole(auth));
 
 const currentSectionLabel = computed(() => {
   const match = navItems.value.find((item) => isActive(item.to));
-  return match?.label || 'Home';
+  if (match) return match.label;
+  if (route.path === homeRoute.value) return 'Dashboard';
+  return 'Home';
 });
 
 const loggedInUserLabel = computed(() => auth.user?.name || 'User');

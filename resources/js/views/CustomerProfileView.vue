@@ -150,15 +150,83 @@
       </section>
 
       <section class="card">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Projects</h2>
-        <div v-if="projects.length" class="space-y-3">
-          <article v-for="project in projects" :key="project.id" class="border border-gray-100 rounded-xl p-4">
-            <div class="flex items-center justify-between gap-2">
-              <h3 class="text-sm font-semibold text-gray-800">{{ project.project_name || project.name || 'Project' }}</h3>
-              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">{{ project.status || 'N/A' }}</span>
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800">Quotations</h2>
+            <p class="text-sm text-gray-500 mt-1">All quotes issued to this customer.</p>
+          </div>
+          <button @click="openQuoteModal" class="btn-secondary md:w-auto inline-flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Create Quote</span>
+          </button>
+        </div>
+
+        <div v-if="quotations.length" class="space-y-3">
+          <article v-for="quote in quotations" :key="quote.id" class="border border-gray-100 rounded-xl p-4">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+              <div>
+                <p class="text-sm font-semibold text-gray-800">{{ quote.quote_number }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ quote.items?.length || 0 }} item(s) &nbsp;·&nbsp; {{ toCurrency(quote.final_total) }}</p>
+                <p class="text-xs text-gray-500 mt-1">Issued: {{ formatDate(quote.issued_at || quote.created_at) }}</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-3">
+                <span
+                  class="text-xs px-2 py-0.5 rounded-full font-medium"
+                  :class="{
+                    'bg-blue-100 text-blue-700': quote.status === 'issued',
+                    'bg-green-100 text-green-700': quote.status === 'agreed',
+                    'bg-gray-100 text-gray-600': quote.status === 'draft',
+                    'bg-red-100 text-red-700': quote.status === 'revoked',
+                  }"
+                >{{ quote.status }}</span>
+
+                <button
+                  @click="viewingQuote = quote"
+                  class="inline-flex items-center gap-1.5 text-primary-700 font-semibold text-sm"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <span>View</span>
+                </button>
+
+                <button
+                  v-if="quote.status === 'draft' || quote.status === 'revoked'"
+                  @click="issueQuotation(quote)"
+                  class="inline-flex items-center gap-1.5 text-blue-700 font-semibold text-sm"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  <span>Issue</span>
+                </button>
+
+                <button
+                  v-if="quote.status === 'issued'"
+                  @click="agreeQuotation(quote)"
+                  class="inline-flex items-center gap-1.5 text-green-700 font-semibold text-sm"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Agreed</span>
+                </button>
+
+                <button
+                  v-if="quote.status === 'issued' || quote.status === 'agreed'"
+                  @click="revokeQuotation(quote)"
+                  class="inline-flex items-center gap-1.5 text-red-700 font-semibold text-sm"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>Revoke</span>
+                </button>
+              </div>
             </div>
-            <p v-if="project.description" class="text-sm text-gray-600 mt-2">{{ project.description }}</p>
-            <p class="text-xs text-gray-500 mt-2">Updated: {{ formatDate(project.updated_at, true) }}</p>
           </article>
         </div>
         <p v-else class="text-sm text-gray-500">No projects linked to this customer yet.</p>
@@ -250,6 +318,108 @@
       </div>
     </div>
 
+    <!-- Quotation Detail Modal -->
+    <div v-if="viewingQuote" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="viewingQuote = null">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-start justify-between">
+          <div>
+            <p class="text-xs text-primary-700 uppercase tracking-wide font-semibold">Quotation</p>
+            <h3 class="text-lg font-bold text-gray-900 mt-0.5">{{ viewingQuote.quote_number }}</h3>
+          </div>
+          <div class="flex items-center gap-3">
+            <span
+              class="text-xs px-2.5 py-1 rounded-full font-semibold"
+              :class="{
+                    'bg-blue-100 text-blue-700': viewingQuote.status === 'issued',
+                    'bg-green-100 text-green-700': viewingQuote.status === 'agreed',
+                    'bg-gray-100 text-gray-600': viewingQuote.status === 'draft',
+                    'bg-red-100 text-red-700': viewingQuote.status === 'revoked',
+              }"
+            >{{ viewingQuote.status }}</span>
+            <button @click="viewingQuote = null" class="text-gray-400 hover:text-gray-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="px-6 py-5 space-y-5">
+          <!-- Meta -->
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p class="text-gray-500">Customer</p>
+              <p class="font-medium text-gray-800 mt-0.5">{{ customer?.full_name }}</p>
+            </div>
+            <div>
+              <p class="text-gray-500">Issued On</p>
+              <p class="font-medium text-gray-800 mt-0.5">{{ formatDate(viewingQuote.issued_at || viewingQuote.created_at) }}</p>
+            </div>
+            <div>
+              <p class="text-gray-500">Discount Rate</p>
+              <p class="font-medium text-gray-800 mt-0.5">{{ viewingQuote.discount_rate }}%</p>
+            </div>
+            <div>
+              <p class="text-gray-500">Commission Rate</p>
+              <p class="font-medium text-gray-800 mt-0.5">{{ viewingQuote.commission_rate }}%</p>
+            </div>
+          </div>
+
+          <!-- Items -->
+          <div v-if="viewingQuote.items?.length">
+            <p class="text-sm font-semibold text-gray-700 mb-2">Items</p>
+            <div class="rounded-xl border border-gray-100 overflow-hidden">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+                  <tr>
+                    <th class="text-left px-4 py-2">Item</th>
+                    <th class="text-right px-4 py-2">Qty</th>
+                    <th class="text-right px-4 py-2">Unit Price</th>
+                    <th class="text-right px-4 py-2">Total</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                  <tr v-for="item in viewingQuote.items" :key="item.id" class="hover:bg-gray-50">
+                    <td class="px-4 py-2 text-gray-800">{{ item.item_name }}</td>
+                    <td class="px-4 py-2 text-right text-gray-600">{{ item.quantity }}</td>
+                    <td class="px-4 py-2 text-right text-gray-600">{{ toCurrency(item.unit_price) }}</td>
+                    <td class="px-4 py-2 text-right font-medium text-gray-800">{{ toCurrency(item.line_total) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p v-else class="text-sm text-gray-500">No items on this quotation.</p>
+
+          <!-- Totals -->
+          <div class="border-t border-gray-100 pt-4 space-y-1.5 text-sm">
+            <div class="flex justify-between text-gray-600">
+              <span>Subtotal</span>
+              <span>{{ toCurrency(viewingQuote.subtotal) }}</span>
+            </div>
+            <div class="flex justify-between text-gray-600">
+              <span>Discount ({{ viewingQuote.discount_rate }}%)</span>
+              <span>-{{ toCurrency(viewingQuote.subtotal - viewingQuote.final_total) }}</span>
+            </div>
+            <div class="flex justify-between font-bold text-gray-900 text-base pt-1">
+              <span>Final Total</span>
+              <span>{{ toCurrency(viewingQuote.final_total) }}</span>
+            </div>
+            <div class="flex justify-between text-gray-500 text-xs pt-1">
+              <span>Commission ({{ viewingQuote.commission_rate }}%)</span>
+              <span>{{ toCurrency(viewingQuote.commission_amount) }}</span>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div v-if="viewingQuote.notes" class="bg-gray-50 rounded-xl px-4 py-3">
+            <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">Notes</p>
+            <p class="text-sm text-gray-700">{{ viewingQuote.notes }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Quick Quote Modal -->
     <div v-if="showQuoteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-2xl shadow-xl max-w-md w-full space-y-4 p-6">
@@ -305,6 +475,7 @@ const { success, error } = useToast();
 
 const showQuoteModal = ref(false);
 const showPaymentModal = ref(false);
+const viewingQuote = ref(null);
 const creatingQuote = ref(false);
 const savingPayment = ref(false);
 const editingPaymentId = ref(null);
@@ -332,6 +503,7 @@ const sortedPayments = computed(() => [...payments.value].sort((left, right) => 
   const leftTime = new Date(left.payment_date || left.created_at || 0).getTime();
   return rightTime - leftTime || Number(right.id || 0) - Number(left.id || 0);
 }));
+const quotations = computed(() => store.currentCustomer?.quotations || []);
 const projects = computed(() => store.currentCustomer?.projects || []);
 const totalPaid = computed(() => payments.value.reduce((sum, item) => sum + Number(item.amount || 0), 0));
 const remainingBalance = computed(() => Math.max(Number(store.currentCustomer?.contract_value || 0) - totalPaid.value, 0));
@@ -440,7 +612,7 @@ async function savePayment() {
     success(editingPaymentId.value ? 'Payment updated successfully.' : 'Payment added successfully.');
 
     if (!editingPaymentId.value && response?.data) {
-      receiptModal.value?.open(response.data, 'receipt');
+      receiptModal.value?.open(response.data, 'receipt', customer.value);
     }
 
     closePaymentModal();
@@ -468,11 +640,41 @@ async function deletePayment(payment) {
 }
 
 function openReceipt(payment) {
-  receiptModal.value?.open(payment, 'receipt');
+  receiptModal.value?.open(payment, 'receipt', customer.value);
 }
 
 function openInvoice(payment) {
-  receiptModal.value?.open(payment, 'invoice');
+  receiptModal.value?.open(payment, 'invoice', customer.value);
+}
+
+async function updateQuotationStatus(quote, newStatus) {
+  try {
+    await axios.patch(`/quotations/${quote.id}/status`, { status: newStatus });
+    await refreshCustomerProfile();
+    const messages = { issued: 'Quotation issued successfully.', agreed: 'Quotation agreed. Contract value updated.', revoked: 'Quotation revoked.', draft: 'Quotation moved back to draft.' };
+    success(messages[newStatus] ?? 'Quotation status updated.');
+  } catch (e) {
+    error(e.response?.data?.message || 'Failed to update quotation status.');
+  }
+}
+
+async function issueQuotation(quote) {
+  if (!window.confirm(`Issue quotation ${quote.quote_number} to the customer?`)) return;
+  await updateQuotationStatus(quote, 'issued');
+}
+
+async function agreeQuotation(quote) {
+  if (!window.confirm(`Mark quotation ${quote.quote_number} as agreed? ${toCurrency(quote.final_total)} will be added to the contract value.`)) return;
+  await updateQuotationStatus(quote, 'agreed');
+}
+
+async function revokeQuotation(quote) {
+  const deducts = quote.status === 'agreed';
+  const msg = deducts
+    ? `Revoke quotation ${quote.quote_number}? ${toCurrency(quote.final_total)} will be deducted from the contract value.`
+    : `Revoke quotation ${quote.quote_number}?`;
+  if (!window.confirm(msg)) return;
+  await updateQuotationStatus(quote, 'revoked');
 }
 
 function openQuoteModal() {

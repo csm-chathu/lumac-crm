@@ -21,10 +21,12 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'  => 'required|string|max:100',
-            'type'  => 'required|in:income,expense',
-            'icon'  => 'nullable|string|max:50',
-            'color' => 'nullable|string|max:20',
+            'name'            => 'required|string|max:100',
+            'type'            => 'required|in:income,expense',
+            'icon'            => 'nullable|string|max:50',
+            'color'           => 'nullable|string|max:20',
+            'gallery_images'  => 'nullable|array|max:12',
+            'gallery_images.*'=> 'url|max:2048',
         ]);
 
         $category = $request->user()->categories()->create($data);
@@ -37,9 +39,12 @@ class CategoryController extends Controller
         abort_if($category->user_id !== $request->user()->id, 403);
 
         $data = $request->validate([
-            'name'  => 'sometimes|string|max:100',
-            'icon'  => 'nullable|string|max:50',
-            'color' => 'nullable|string|max:20',
+            'name'            => 'sometimes|string|max:100',
+            'type'            => 'sometimes|in:income,expense',
+            'icon'            => 'nullable|string|max:50',
+            'color'           => 'nullable|string|max:20',
+            'gallery_images'  => 'nullable|array|max:12',
+            'gallery_images.*'=> 'url|max:2048',
         ]);
 
         $category->update($data);

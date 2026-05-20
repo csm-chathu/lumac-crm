@@ -11,8 +11,13 @@ class CustomerController extends Controller
 {
     public function index(Request $request)
     {
-        $customers = $request->user()
-            ->customers()
+        $user = $request->user();
+
+        $query = $user->is_admin
+            ? Customer::query()
+            : $user->customers();
+
+        $customers = $query
             ->with(['solution', 'requirements.solutionFeature', 'activities', 'portalUser', 'projects', 'advancePayments'])
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
             ->orderByDesc('created_at')
@@ -44,14 +49,14 @@ class CustomerController extends Controller
 
     public function show(Request $request, Customer $customer)
     {
-        abort_if($customer->user_id !== $request->user()->id, 403);
+        abort_if(! $request->user()->is_admin && $customer->user_id !== $request->user()->id, 403);
 
-        return response()->json($customer->load(['solution.features', 'requirements.solutionFeature', 'activities', 'portalUser', 'projects', 'advancePayments']));
+        return response()->json($customer->load(['solution.features', 'requirements.solutionFeature', 'activities', 'portalUser', 'projects', 'advancePayments', 'quotations.items']));
     }
 
     public function update(Request $request, Customer $customer)
     {
-        abort_if($customer->user_id !== $request->user()->id, 403);
+        abort_if(! $request->user()->is_admin && $customer->user_id !== $request->user()->id, 403);
 
         $data = $request->validate([
             'full_name' => 'sometimes|string|max:255',
@@ -81,7 +86,7 @@ class CustomerController extends Controller
 
     public function destroy(Request $request, Customer $customer)
     {
-        abort_if($customer->user_id !== $request->user()->id, 403);
+        abort_if(! $request->user()->is_admin && $customer->user_id !== $request->user()->id, 403);
 
         $customer->delete();
 

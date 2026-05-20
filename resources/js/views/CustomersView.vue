@@ -53,7 +53,18 @@
 
       <div v-else-if="customerStore.customers.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div v-for="customer in customerStore.customers" :key="customer.id" class="border rounded-lg p-4 shadow-sm">
-          <div class="font-medium text-gray-800">Name: {{ customer.full_name }}</div>
+          <div class="flex items-start gap-3 mb-2">
+            <div
+              class="h-11 w-11 shrink-0 rounded-full flex items-center justify-center text-sm font-semibold ring-1 ring-inset"
+              :class="getCustomerAvatarClass(customer.full_name)"
+            >
+              {{ getCustomerInitials(customer.full_name) }}
+            </div>
+            <div class="min-w-0">
+              <div class="font-medium text-gray-800 truncate">Name: {{ customer.full_name }}</div>
+              <div class="text-sm text-gray-500 truncate">{{ customer.email || 'No email' }}</div>
+            </div>
+          </div>
           <div class="text-gray-500">Company: {{ customer.company || 'N/A' }}</div>
           <div class="text-gray-500">Solution: {{ customer.solution?.name || 'Not assigned' }}</div>
           <div class="text-gray-500">Status: {{ statusLabel(customer.status) }}</div>
@@ -141,6 +152,36 @@ const form = reactive({
 
 function statusLabel(status) {
   return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function getCustomerInitials(name) {
+  const normalized = (name || '').trim();
+  if (!normalized) return 'CU';
+
+  const parts = normalized.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
+
+function getCustomerAvatarClass(name) {
+  const palettes = [
+    'bg-cyan-100 text-cyan-700 ring-cyan-200',
+    'bg-teal-100 text-teal-700 ring-teal-200',
+    'bg-orange-100 text-orange-700 ring-orange-200',
+    'bg-fuchsia-100 text-fuchsia-700 ring-fuchsia-200',
+    'bg-blue-100 text-blue-700 ring-blue-200',
+  ];
+
+  const value = (name || '').trim();
+  if (!value) return palettes[0];
+
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash + value.charCodeAt(i) * (i + 1)) % palettes.length;
+  }
+  return palettes[hash];
 }
 
 async function loadData() {

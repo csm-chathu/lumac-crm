@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\AdminAgentController;
 use App\Http\Controllers\Api\AdminConfigController;
 use App\Http\Controllers\Api\AdminAnalyticsController;
 use App\Http\Controllers\Api\AdminClientController;
+use App\Http\Controllers\Api\CloudinaryController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\AgentPaymentController;
 
@@ -43,19 +44,24 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Devices API (all authenticated users)
     Route::apiResource('devices', \App\Http\Controllers\Api\DeviceController::class);
+    Route::get('/cloudinary/signature', [CloudinaryController::class, 'getSignature']);
 
     // Customers (scoped to logged-in user in controller)
     Route::apiResource('customers', CustomerController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     Route::post('/customers/{customer}/requirements', [CustomerRequirementController::class, 'upsert']);
+
+    // Solutions readable by agents and admins
+    Route::get('/solutions', [SolutionController::class, 'index']);
+    Route::get('/solutions/{solution}', [SolutionController::class, 'show']);
+
+    // Quotation status update accessible to agents (own) and admins
+    Route::patch('/quotations/{quotation}/status', [QuotationController::class, 'updateStatus']);
 
     // Agent portal
     Route::middleware('agent')->group(function () {
         Route::get('/agent/profile', [AgentProfileController::class, 'show']);
         Route::put('/agent/profile', [AgentProfileController::class, 'update']);
         Route::get('/agent/analytics', [AgentProfileController::class, 'analytics']);
-
-        Route::get('/solutions', [SolutionController::class, 'index']);
-        Route::get('/solutions/{solution}', [SolutionController::class, 'show']);
 
         Route::get('/quotations', [QuotationController::class, 'index']);
         Route::post('/quotations', [QuotationController::class, 'store']);
