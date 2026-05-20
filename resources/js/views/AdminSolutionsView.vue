@@ -131,13 +131,13 @@
                     :src="img"
                     :alt="`${solution.name} image ${idx + 1}`"
                     class="w-12 h-12 rounded-md border border-gray-200 object-cover cursor-pointer"
-                    @click="openSolutionGallery(solution, idx)"
+                    @click="openSolutionGallery(solution, Math.min(idx, (solution.gallery_images.length || 1) - 1))"
                   />
                   <button
                     v-if="solution.gallery_images.length > 6"
                     type="button"
                     class="text-xs text-gray-500 font-medium hover:text-gray-700"
-                    @click="openSolutionGallery(solution, 6)"
+                    @click="openSolutionGallery(solution, Math.min(6, solution.gallery_images.length - 1))"
                   >
                     +{{ solution.gallery_images.length - 6 }}
                   </button>
@@ -206,25 +206,6 @@
               </div>
             </transition>
           </div>
-        // Accordion state for feature checklist
-        const featureChecklistOpen = reactive({});
-
-        function toggleFeatureChecklist(solutionId) {
-          featureChecklistOpen[solutionId] = !featureChecklistOpen[solutionId];
-        }
-
-        // Open the first checklist by default (optional, can be removed if all should be collapsed)
-        watch(
-          () => filteredSolutions.value,
-          (solutions) => {
-            for (const s of solutions) {
-              if (!(s.id in featureChecklistOpen)) {
-                featureChecklistOpen[s.id] = false;
-              }
-            }
-          },
-          { immediate: true }
-        );
         </article>
       </div>
       <p v-else class="text-sm text-gray-500">No solutions yet.</p>
@@ -283,6 +264,11 @@ const savingSolution = ref(false);
 const savingFeatureFor = ref(null);
 const editingSolutionId = ref(null);
 const featureForms = reactive({});
+const featureChecklistOpen = reactive({});
+
+function toggleFeatureChecklist(solutionId) {
+  featureChecklistOpen[solutionId] = !featureChecklistOpen[solutionId];
+}
 const filterStatus = ref('');
 const searchQuery = ref('');
 const showAddSolutionModal = ref(false);
@@ -455,7 +441,11 @@ function openSolutionGallery(solution, startIndex = 0) {
 
   solutionGalleryImages.value = images;
   solutionGalleryTitle.value = solution?.name || 'Solution';
-  solutionGalleryIndex.value = Math.min(Math.max(startIndex, 0), images.length - 1);
+  // Clamp index to valid range
+  let idx = Number(startIndex);
+  if (!Number.isInteger(idx) || idx < 0) idx = 0;
+  if (idx >= images.length) idx = images.length - 1;
+  solutionGalleryIndex.value = idx;
   showSolutionGalleryModal.value = true;
 }
 
@@ -469,18 +459,26 @@ function closeSolutionGallery() {
 function prevSolutionGalleryImage() {
   if (!solutionGalleryImages.value.length) return;
   const total = solutionGalleryImages.value.length;
-  solutionGalleryIndex.value = (solutionGalleryIndex.value - 1 + total) % total;
+  let idx = solutionGalleryIndex.value;
+  if (typeof idx !== 'number' || idx < 0 || idx >= total) idx = 0;
+  solutionGalleryIndex.value = (idx - 1 + total) % total;
 }
 
 function nextSolutionGalleryImage() {
   if (!solutionGalleryImages.value.length) return;
   const total = solutionGalleryImages.value.length;
-  solutionGalleryIndex.value = (solutionGalleryIndex.value + 1) % total;
+  let idx = solutionGalleryIndex.value;
+  if (typeof idx !== 'number' || idx < 0 || idx >= total) idx = 0;
+  solutionGalleryIndex.value = (idx + 1) % total;
 }
 
 const currentSolutionGalleryImage = computed(() => {
   if (!solutionGalleryImages.value.length) return '';
-  return solutionGalleryImages.value[solutionGalleryIndex.value] || '';
+  const images = solutionGalleryImages.value;
+  const idx = solutionGalleryIndex.value;
+  if (!Array.isArray(images) || images.length === 0) return '';
+  if (typeof idx !== 'number' || idx < 0 || idx >= images.length) return images[0];
+  return images[idx] || images[0];
 });
 
 async function uploadSolutionImages(files) {
@@ -617,6 +615,9 @@ async function removeFeature(solutionId, featureId) {
 function hydrateFeatureForms() {
   for (const solution of store.solutions) {
     ensureFeatureForm(solution.id);
+    if (!(solution.id in featureChecklistOpen)) {
+      featureChecklistOpen[solution.id] = false;
+    }
   }
 }
 

@@ -45,11 +45,13 @@ function withDescriptions(items) {
 }
 
 export function getNavItemsForRole({ isAdmin, isCustomer }) {
+  // Show Quotations menu for all roles
   if (isAdmin) {
     return withDescriptions([
       { name: 'master-data', to: '/master-data/solutions', label: 'Solutions', icon: CircleStackIcon, activeIcon: CircleStackIconSolid },
       { name: 'admin-agents', to: '/admin/agents', label: 'Agents', icon: IdentificationIcon, activeIcon: IdentificationIconSolid },
       { name: 'customers', to: '/customers', label: 'Customers', icon: UserGroupIcon, activeIcon: UserGroupIconSolid },
+      { name: 'quotations', to: '/quotations', label: 'Quotations', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
       { name: 'finance-expenses', to: '/finance/expenses', label: 'Expenses', icon: CurrencyDollarIcon, activeIcon: CurrencyDollarIconSolid },
       { name: 'devices', to: '/devices', label: 'Devices', icon: RectangleGroupIcon, activeIcon: RectangleGroupIconSolid },
       { name: 'transactions', to: '/transactions', label: 'Transactions', icon: ArrowsRightLeftIcon, activeIcon: ArrowsRightLeftIconSolid },
@@ -60,10 +62,12 @@ export function getNavItemsForRole({ isAdmin, isCustomer }) {
   if (isCustomer) {
     return withDescriptions([
       { name: 'client-portal', to: '/client/portal', label: 'Portal', icon: RectangleGroupIcon, activeIcon: RectangleGroupIconSolid },
+      { name: 'quotations', to: '/quotations', label: 'Quotations', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
       { name: 'profile', to: '/profile', label: 'Profile', icon: UserCircleIcon, activeIcon: UserCircleIconSolid },
     ]);
   }
 
+  // Default (agent/other roles)
   return withDescriptions([
     { name: 'dashboard', to: '/', label: 'Dashboard', icon: HomeIcon, activeIcon: HomeIconSolid },
     { name: 'customers', to: '/customers', label: 'Customers', icon: UserGroupIcon, activeIcon: UserGroupIconSolid },

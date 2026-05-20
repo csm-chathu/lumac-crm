@@ -1,0 +1,1 @@
+import{i as a,p as e}from"./app-Biqdapyi.js";const i=a("solutions",()=>{const t=e([]),o=e(!1);async function n(){o.value=!0;try{const{data:s}=await axios.get("/solutions");return t.value=s,s}finally{o.value=!1}}return{solutions:t,loading:o,fetchSolutions:n}});export{i as u};

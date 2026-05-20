@@ -85,6 +85,7 @@
         </div>
 
         <div class="p-5 md:p-6 space-y-5">
+          <!-- Customer + Commission (read-only) -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <select v-model="form.customer_id" class="input-field">
               <option value="">Select customer</option>
@@ -93,87 +94,94 @@
               </option>
             </select>
 
-            <template v-if="isAgent">
-              <input value="30" type="number" class="input-field" placeholder="Commission rate" disabled />
-            </template>
-            <template v-else>
-              <input v-model.number="form.commission_rate" type="number" min="0" max="100" step="0.01" class="input-field" placeholder="Commission rate" />
-            </template>
+            <div class="input-field bg-gray-50 text-gray-500 flex items-center gap-2 cursor-not-allowed select-none">
+              <svg class="w-4 h-4 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span class="text-sm">Commission: <strong class="text-gray-700">{{ isAgent ? 30 : form.commission_rate }}%</strong></span>
+              <span class="ml-auto text-xs text-gray-400">Fixed</span>
+            </div>
           </div>
 
-          <p v-if="isAgent" class="text-xs text-gray-500">For agents, commission is fixed at 30% and calculated from solution items only.</p>
+          <p v-if="isAgent" class="text-xs text-gray-500 -mt-2">For agents, commission is fixed at 30% and calculated from solution items only.</p>
 
+          <!-- Devices — compact tiles -->
           <div class="space-y-3 border border-gray-100 rounded-xl p-4">
             <div class="flex items-center justify-between gap-3 flex-wrap">
               <p class="text-sm font-semibold text-gray-800">Devices</p>
               <span class="text-xs text-gray-500">Click to select devices for this quotation.</span>
             </div>
 
-            <div v-if="devices.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto pr-1">
+            <div v-if="devices.length" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 max-h-44 overflow-y-auto pr-1">
               <button
                 v-for="device in devices"
                 :key="device.id"
                 type="button"
-                class="text-left rounded-lg border px-3 py-2 transition"
+                class="text-left rounded-lg border px-2 py-2 transition"
                 :class="isDeviceSelected(device.id) ? 'border-primary-600 bg-primary-50 text-primary-900' : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'"
                 @click="toggleDeviceSelection(device.id)"
               >
-                <div class="mb-2 h-24 w-full overflow-hidden rounded-md bg-slate-100 border border-slate-200">
-                  <img
-                    v-if="device.image_url"
-                    :src="device.image_url"
-                    :alt="device.name"
-                    class="h-full w-full object-cover"
-                  />
-                  <div v-else class="h-full w-full flex items-center justify-center text-xs text-gray-400">
-                    No image
-                  </div>
+                <div class="mb-1.5 h-12 w-full overflow-hidden rounded-md bg-slate-100 border border-slate-200">
+                  <img v-if="device.image_url" :src="device.image_url" :alt="device.name" class="h-full w-full object-cover" />
+                  <div v-else class="h-full w-full flex items-center justify-center text-xs text-gray-400">No image</div>
                 </div>
-                <p class="text-sm font-semibold">{{ device.name }}</p>
-                <p class="text-xs text-gray-500">{{ device.model || 'No model' }}</p>
-                <p class="text-xs font-medium mt-1">{{ toCurrency(device.selling_price) }}</p>
+                <p class="text-xs font-semibold leading-tight truncate">{{ device.name }}</p>
+                <p class="text-xs text-gray-500 leading-tight truncate">{{ device.model || '—' }}</p>
+                <p class="text-xs font-medium mt-0.5">{{ toCurrency(device.selling_price) }}</p>
               </button>
             </div>
             <p v-else class="text-sm text-gray-500">No devices available.</p>
 
-            <div class="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <p class="text-xs text-gray-600">Selected devices: {{ selectedDeviceIds.length }}</p>
+            <div class="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2 flex items-center justify-between gap-2">
+              <p class="text-xs text-gray-600">Selected: {{ selectedDeviceIds.length }}</p>
               <p class="text-xs font-semibold text-gray-800">Device Total: {{ toCurrency(selectedDevicesTotal) }}</p>
             </div>
           </div>
 
-          <div class="space-y-3">
-            <div
-              v-for="(item, idx) in form.items"
-              :key="`item-${idx}`"
-              class="grid grid-cols-1 md:grid-cols-4 gap-3 border border-gray-100 rounded-xl p-3"
-            >
-              <select v-model="item.solution_id" class="input-field" @change="applySolutionPrice(item)">
-                <option value="">Select solution</option>
-                <option v-for="solution in solutionsStore.solutions" :key="solution.id" :value="solution.id">
-                  {{ solution.name }}
-                </option>
-              </select>
+          <!-- Solutions — tiles with qty controls -->
+          <div class="space-y-3 border border-gray-100 rounded-xl p-4">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <p class="text-sm font-semibold text-gray-800">Solutions</p>
+              <span class="text-xs text-gray-500">Click to select solutions for this quotation.</span>
+            </div>
 
-              <input v-model.number="item.quantity" type="number" min="1" class="input-field" placeholder="Qty" />
-              <input v-model.number="item.unit_price" type="number" min="0" step="0.01" class="input-field" placeholder="Unit price" />
+            <div v-if="solutionsStore.solutions.length" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-56 overflow-y-auto pr-1">
+              <button
+                v-for="solution in solutionsStore.solutions"
+                :key="solution.id"
+                type="button"
+                class="text-left rounded-lg border px-3 py-2.5 transition"
+                :class="isSolutionSelected(solution.id) ? 'border-primary-600 bg-primary-50 text-primary-900' : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'"
+                @click="toggleSolutionSelection(solution)"
+              >
+                <p class="text-sm font-semibold leading-tight">{{ solution.name }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ toCurrency(solution.base_price) }}</p>
 
-              <button type="button" class="w-full rounded-xl border border-red-200 text-red-600 font-semibold inline-flex items-center justify-center gap-2" @click="removeItem(idx)">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
-                </svg>
-                <span>Remove</span>
+                <div v-if="isSolutionSelected(solution.id)" class="mt-2 flex items-center gap-1.5" @click.stop>
+                  <button
+                    type="button"
+                    class="w-5 h-5 rounded border border-primary-300 bg-white text-primary-700 text-xs flex items-center justify-center hover:bg-primary-50"
+                    @click="decrementSolutionQty(solution.id)"
+                  >−</button>
+                  <span class="text-xs font-semibold w-5 text-center">{{ selectedSolutions[solution.id]?.quantity || 1 }}</span>
+                  <button
+                    type="button"
+                    class="w-5 h-5 rounded border border-primary-300 bg-white text-primary-700 text-xs flex items-center justify-center hover:bg-primary-50"
+                    @click="incrementSolutionQty(solution.id)"
+                  >+</button>
+                </div>
               </button>
+            </div>
+            <p v-else class="text-sm text-gray-500">No solutions available.</p>
+
+            <div class="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2 flex items-center justify-between gap-2">
+              <p class="text-xs text-gray-600">Selected: {{ Object.keys(selectedSolutions).length }}</p>
+              <p class="text-xs font-semibold text-gray-800">Solutions Total: {{ toCurrency(selectedSolutionsTotal) }}</p>
             </div>
           </div>
 
-          <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-            <button type="button" class="btn-secondary md:w-auto inline-flex items-center gap-2" @click="addItem">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Add Item</span>
-            </button>
+          <!-- Actions -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
             <p class="text-sm font-semibold text-gray-800">Estimated Total: {{ toCurrency(estimatedTotal) }}</p>
             <div class="flex flex-col sm:flex-row gap-3">
               <button type="button" class="btn-secondary md:w-auto inline-flex items-center gap-2" @click="closeQuotationModal">
@@ -251,6 +259,7 @@ const { success, error } = useToast();
 const quotations = ref([]);
 const devices = ref([]);
 const selectedDeviceIds = ref([]);
+const selectedSolutions = reactive({});
 const loading = ref(false);
 const creating = ref(false);
 const showQuotationModal = ref(false);
@@ -264,7 +273,6 @@ const form = reactive({
   customer_id: '',
   discount_rate: isAgent.value ? 0 : 35,
   commission_rate: isAgent.value ? 30 : 10,
-  items: [{ solution_id: '', item_name: '', quantity: 1, unit_price: 0 }],
 });
 
 const filteredQuotations = computed(() => {
@@ -295,11 +303,14 @@ const selectedDevicesTotal = computed(() =>
   selectedDevices.value.reduce((sum, device) => sum + Number(device.selling_price || 0), 0)
 );
 
-const manualItemsTotal = computed(() =>
-  form.items.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unit_price || 0)), 0)
+const selectedSolutionsTotal = computed(() =>
+  Object.values(selectedSolutions).reduce(
+    (sum, { solution, quantity }) => sum + Number(solution.base_price || 0) * quantity,
+    0
+  )
 );
 
-const estimatedTotal = computed(() => manualItemsTotal.value + selectedDevicesTotal.value);
+const estimatedTotal = computed(() => selectedSolutionsTotal.value + selectedDevicesTotal.value);
 
 function resetQuoteFilters() {
   searchQuery.value = '';
@@ -314,8 +325,8 @@ function resetQuotationForm() {
   form.customer_id = '';
   form.discount_rate = isAgent.value ? 0 : 35;
   form.commission_rate = isAgent.value ? 30 : 10;
-  form.items = [{ solution_id: '', item_name: '', quantity: 1, unit_price: 0 }];
   selectedDeviceIds.value = [];
+  Object.keys(selectedSolutions).forEach((key) => delete selectedSolutions[key]);
 }
 
 function openQuotationModal() {
@@ -327,21 +338,31 @@ function closeQuotationModal() {
   resetQuotationForm();
 }
 
-function addItem() {
-  form.items.push({ solution_id: '', item_name: '', quantity: 1, unit_price: 0 });
+function isSolutionSelected(solutionId) {
+  return solutionId in selectedSolutions;
 }
 
-function removeItem(index) {
-  form.items.splice(index, 1);
-  if (!form.items.length) addItem();
+function toggleSolutionSelection(solution) {
+  if (isSolutionSelected(solution.id)) {
+    delete selectedSolutions[solution.id];
+  } else {
+    selectedSolutions[solution.id] = { solution, quantity: 1 };
+  }
 }
 
-function applySolutionPrice(item) {
-  const solution = solutionsStore.solutions.find((s) => s.id === Number(item.solution_id));
-  if (!solution) return;
+function incrementSolutionQty(solutionId) {
+  if (selectedSolutions[solutionId]) {
+    selectedSolutions[solutionId].quantity++;
+  }
+}
 
-  item.item_name = solution.name;
-  item.unit_price = Number(solution.base_price || 0);
+function decrementSolutionQty(solutionId) {
+  if (!selectedSolutions[solutionId]) return;
+  if (selectedSolutions[solutionId].quantity > 1) {
+    selectedSolutions[solutionId].quantity--;
+  } else {
+    delete selectedSolutions[solutionId];
+  }
 }
 
 function isDeviceSelected(deviceId) {
@@ -382,11 +403,11 @@ async function fetchQuotations() {
 async function createQuotation() {
   creating.value = true;
   try {
-    const manualItems = form.items.map((item) => ({
-      solution_id: item.solution_id ? Number(item.solution_id) : null,
-      item_name: item.item_name || null,
-      quantity: Number(item.quantity || 1),
-      unit_price: Number(item.unit_price || 0),
+    const solutionItems = Object.entries(selectedSolutions).map(([solutionId, { solution, quantity }]) => ({
+      solution_id: Number(solutionId),
+      item_name: solution.name,
+      quantity,
+      unit_price: Number(solution.base_price || 0),
     }));
 
     const deviceItems = selectedDevices.value.map((device) => ({
@@ -401,7 +422,7 @@ async function createQuotation() {
       discount_rate: isAgent.value ? 0 : Number(form.discount_rate),
       commission_rate: isAgent.value ? 30 : Number(form.commission_rate),
       status: 'issued',
-      items: [...manualItems, ...deviceItems],
+      items: [...solutionItems, ...deviceItems],
     };
 
     await axios.post('/quotations', payload);

@@ -3,7 +3,7 @@
     <!-- Logo / Header -->
     <div class="text-center mb-8 md:mb-12">
       <span class="inline-block font-extrabold text-4xl md:text-5xl lg:text-6xl tracking-widest drop-shadow-lg select-none">
-        <span class="text-white">LU</span><span class="text-sky-300">MAC</span>
+        <span class="text-white">LU</span><span class="text-sky-300 mac-flash">MAC</span>
       </span>
     </div>
 
@@ -70,3 +70,20 @@ async function handleLogin() {
   }
 }
 </script>
+
+<style scoped>
+.mac-flash {
+  background: linear-gradient(90deg, #7dd3fc 20%, #ffffff 50%, #7dd3fc 80%);
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: mac-sweep 2.5s ease-in-out infinite;
+}
+
+@keyframes mac-sweep {
+  0%   { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+</style>

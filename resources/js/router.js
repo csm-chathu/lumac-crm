@@ -47,7 +47,7 @@ const routes = [
                 path: 'quotations',
                 name: 'quotations',
                 component: () => import('./views/QuotationsView.vue'),
-                meta: { requiresAgent: true },
+                meta: { requiresAgentOrAdmin: true },
             },
             {
                 path: 'finance',
