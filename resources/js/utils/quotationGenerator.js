@@ -20,11 +20,11 @@ import html2pdf from 'html2pdf.js';
  */
 export function generateQuotationHTML(quotation, size = 'a4') {
   const { customer, items, final_total, quote_number, discount_rate } = quotation;
+  const hasSolutions = items.some((item) => item.solution_id !== null && item.solution_id !== undefined);
   
   // Calculate subtotal and totals
   const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-  const discountAmount = (subtotal * discount_rate) / 100;
-  const total = Number(final_total ?? (subtotal - discountAmount));
+  const total = Number(final_total ?? subtotal);
 
   const pageWidth = size === 'a5' ? '148mm' : '210mm';
   const pageHeight = size === 'a5' ? '210mm' : '297mm';
@@ -325,12 +325,6 @@ export function generateQuotationHTML(quotation, size = 'a4') {
               <td colspan="4" style="padding: 8px; border-top: 1px solid #e0e0e0; font-size: ${fontSize}; text-align: right; font-weight: 600;">Subtotal:</td>
               <td style="padding: 8px; border-top: 1px solid #e0e0e0; font-size: ${fontSize}; text-align: right;">LKR ${Number(subtotal).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             </tr>
-            ${discount_rate > 0 ? `
-            <tr>
-              <td colspan="4" style="padding: 8px; font-size: ${fontSize}; text-align: right; font-weight: 600;">Discount (${discount_rate}%):</td>
-              <td style="padding: 8px; font-size: ${fontSize}; text-align: right;">-LKR ${Number(discountAmount).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-            </tr>
-            ` : ''}
             <tr>
               <td colspan="4" style="padding: 10px 8px; border-top: 2px solid #1e40af; font-size: ${size === 'a5' ? '13px' : '16px'}; text-align: right; font-weight: 700; color: #1e40af;">TOTAL:</td>
               <td style="padding: 10px 8px; border-top: 2px solid #1e40af; font-size: ${size === 'a5' ? '13px' : '16px'}; text-align: right; font-weight: 700; color: #1e40af;">LKR ${Number(total).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -338,7 +332,8 @@ export function generateQuotationHTML(quotation, size = 'a4') {
           </tfoot>
         </table>
         
-        <!-- Payment Schedule -->
+        <!-- Payment Schedule (solutions only) -->
+        ${hasSolutions ? `
         <div class="payment-schedule">
           <div class="payment-schedule-title">Payment Schedule</div>
           <ul>
@@ -347,11 +342,13 @@ export function generateQuotationHTML(quotation, size = 'a4') {
           </ul>
         </div>
 
-        <!-- Terms and Conditions -->
+        ` : ''}
+
+        <!-- Terms and Conditions (always shown) -->
         <div class="terms">
           <h2>Terms and Conditions</h2>
           <ol>
-            <li><strong>Hosting Renewal:</strong> The hosting and domain service is valid for one (1) year. It must be renewed annually to maintain service.</li>
+            ${hasSolutions ? `<li><strong>Hosting Renewal:</strong> The hosting and domain service is valid for one (1) year. It must be renewed annually to maintain service.</li>` : ''}
             <li><strong>Validity:</strong> This quotation is valid for 30 days from the date of issue.</li>
             <li><strong>Warranty:</strong> Hardware items carry a 12-month warranty against manufacturing defects.</li>
           </ol>

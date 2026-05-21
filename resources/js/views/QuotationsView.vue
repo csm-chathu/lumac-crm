@@ -119,7 +119,7 @@
                 type="button"
                 class="text-left rounded-lg border px-2 py-2 transition"
                 :class="isDeviceSelected(device.id) ? 'border-primary-600 bg-primary-50 text-primary-900' : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'"
-                @click="toggleDeviceSelection(device.id)"
+                @click="toggleDeviceSelection(device)"
               >
                 <div class="mb-1.5 h-12 w-full overflow-hidden rounded-md bg-slate-100 border border-slate-200">
                   <img v-if="device.image_url" :src="device.image_url" :alt="device.name" class="h-full w-full object-cover" />
@@ -128,12 +128,26 @@
                 <p class="text-xs font-semibold leading-tight truncate">{{ device.name }}</p>
                 <p class="text-xs text-gray-500 leading-tight truncate">{{ device.model || '—' }}</p>
                 <p class="text-xs font-medium mt-0.5">{{ toCurrency(device.selling_price) }}</p>
+
+                <div v-if="isDeviceSelected(device.id)" class="mt-2 flex items-center gap-1.5" @click.stop>
+                  <button
+                    type="button"
+                    class="w-5 h-5 rounded border border-primary-300 bg-white text-primary-700 text-xs flex items-center justify-center hover:bg-primary-50"
+                    @click="decrementDeviceQty(device.id)"
+                  >−</button>
+                  <span class="text-xs font-semibold w-5 text-center">{{ selectedDevices[device.id]?.quantity || 1 }}</span>
+                  <button
+                    type="button"
+                    class="w-5 h-5 rounded border border-primary-300 bg-white text-primary-700 text-xs flex items-center justify-center hover:bg-primary-50"
+                    @click="incrementDeviceQty(device.id)"
+                  >+</button>
+                </div>
               </button>
             </div>
             <p v-else class="text-sm text-gray-500">No devices available.</p>
 
             <div class="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2 flex items-center justify-between gap-2">
-              <p class="text-xs text-gray-600">Selected: {{ selectedDeviceIds.length }}</p>
+              <p class="text-xs text-gray-600">Selected: {{ Object.keys(selectedDevices).length }}</p>
               <p class="text-xs font-semibold text-gray-800">Device Total: {{ toCurrency(selectedDevicesTotal) }}</p>
             </div>
           </div>
@@ -157,19 +171,6 @@
                 <p class="text-sm font-semibold leading-tight">{{ solution.name }}</p>
                 <p class="text-xs text-gray-500 mt-0.5">{{ toCurrency(solution.base_price) }}</p>
 
-                <div v-if="isSolutionSelected(solution.id)" class="mt-2 flex items-center gap-1.5" @click.stop>
-                  <button
-                    type="button"
-                    class="w-5 h-5 rounded border border-primary-300 bg-white text-primary-700 text-xs flex items-center justify-center hover:bg-primary-50"
-                    @click="decrementSolutionQty(solution.id)"
-                  >−</button>
-                  <span class="text-xs font-semibold w-5 text-center">{{ selectedSolutions[solution.id]?.quantity || 1 }}</span>
-                  <button
-                    type="button"
-                    class="w-5 h-5 rounded border border-primary-300 bg-white text-primary-700 text-xs flex items-center justify-center hover:bg-primary-50"
-                    @click="incrementSolutionQty(solution.id)"
-                  >+</button>
-                </div>
               </button>
             </div>
             <p v-else class="text-sm text-gray-500">No solutions available.</p>
@@ -258,7 +259,7 @@ const { success, error } = useToast();
 
 const quotations = ref([]);
 const devices = ref([]);
-const selectedDeviceIds = ref([]);
+const selectedDevices = reactive({});
 const selectedSolutions = reactive({});
 const loading = ref(false);
 const creating = ref(false);
@@ -295,12 +296,11 @@ const filteredQuotations = computed(() => {
   return results;
 });
 
-const selectedDevices = computed(() =>
-  devices.value.filter((device) => selectedDeviceIds.value.includes(Number(device.id)))
-);
-
 const selectedDevicesTotal = computed(() =>
-  selectedDevices.value.reduce((sum, device) => sum + Number(device.selling_price || 0), 0)
+  Object.values(selectedDevices).reduce(
+    (sum, { device, quantity }) => sum + Number(device.selling_price || 0) * quantity,
+    0
+  )
 );
 
 const selectedSolutionsTotal = computed(() =>
@@ -325,7 +325,7 @@ function resetQuotationForm() {
   form.customer_id = '';
   form.discount_rate = isAgent.value ? 0 : 35;
   form.commission_rate = isAgent.value ? 30 : 10;
-  selectedDeviceIds.value = [];
+  Object.keys(selectedDevices).forEach((key) => delete selectedDevices[key]);
   Object.keys(selectedSolutions).forEach((key) => delete selectedSolutions[key]);
 }
 
@@ -366,17 +366,30 @@ function decrementSolutionQty(solutionId) {
 }
 
 function isDeviceSelected(deviceId) {
-  return selectedDeviceIds.value.includes(Number(deviceId));
+  return deviceId in selectedDevices;
 }
 
-function toggleDeviceSelection(deviceId) {
-  const id = Number(deviceId);
-  if (isDeviceSelected(id)) {
-    selectedDeviceIds.value = selectedDeviceIds.value.filter((selectedId) => selectedId !== id);
-    return;
+function toggleDeviceSelection(device) {
+  if (isDeviceSelected(device.id)) {
+    delete selectedDevices[device.id];
+  } else {
+    selectedDevices[device.id] = { device, quantity: 1 };
   }
+}
 
-  selectedDeviceIds.value.push(id);
+function incrementDeviceQty(deviceId) {
+  if (selectedDevices[deviceId]) {
+    selectedDevices[deviceId].quantity++;
+  }
+}
+
+function decrementDeviceQty(deviceId) {
+  if (!selectedDevices[deviceId]) return;
+  if (selectedDevices[deviceId].quantity > 1) {
+    selectedDevices[deviceId].quantity--;
+  } else {
+    delete selectedDevices[deviceId];
+  }
 }
 
 async function fetchDevices() {
@@ -410,10 +423,10 @@ async function createQuotation() {
       unit_price: Number(solution.base_price || 0),
     }));
 
-    const deviceItems = selectedDevices.value.map((device) => ({
+    const deviceItems = Object.values(selectedDevices).map(({ device, quantity }) => ({
       solution_id: null,
       item_name: device.model ? `${device.name} (${device.model})` : device.name,
-      quantity: 1,
+      quantity,
       unit_price: Number(device.selling_price || 0),
     }));
 
