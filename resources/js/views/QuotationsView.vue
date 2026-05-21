@@ -55,6 +55,13 @@
                 <span>Preview</span>
               </button>
   
+              <button class="text-gray-600 font-semibold text-xs inline-flex items-center gap-1 hover:text-gray-900" @click="downloadPDF(quote.id)" title="Download PDF">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                </svg>
+                <span>Download</span>
+              </button>
+
               <button class="text-green-700 font-semibold text-xs inline-flex items-center gap-1 hover:text-green-900" @click="downloadAndSend(quote.id)" title="Download & Send via WhatsApp">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2v-8a2 2 0 012-2h2" />

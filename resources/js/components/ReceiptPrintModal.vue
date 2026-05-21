@@ -9,9 +9,9 @@
             <PrinterIcon class="w-4 h-4 inline mr-1" />
             Print
           </button>
-          <button @click="downloadAndSend" class="btn-primary min-w-[9.5rem] px-4 py-2 text-sm inline-flex items-center justify-center gap-1 whitespace-nowrap">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 13.487c-.272-.136-1.607-.793-1.856-.883-.249-.09-.43-.136-.611.136-.181.272-.7.883-.858 1.064-.158.181-.317.204-.589.068-.272-.136-1.148-.423-2.187-1.35-.809-.721-1.355-1.612-1.515-1.884-.158-.272-.017-.419.12-.555.123-.122.272-.317.408-.476.136-.158.181-.272.272-.453.09-.181.045-.34-.022-.476-.068-.136-.611-1.477-.837-2.027-.221-.53-.447-.457-.611-.466l-.52-.009c-.181 0-.476.068-.726.34-.249.272-.953.933-.953 2.27 0 1.337.977 2.63 1.113 2.81.136.181 1.924 2.939 4.668 3.999.653.225 1.162.36 1.56.461.655.167 1.252.144 1.724.087.526-.062 1.607-.656 1.834-1.289.227-.633.227-1.176.159-1.289-.068-.113-.249-.181-.521-.317z" /><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>
-            Download & Send
+          <button @click="downloadAndSend" class="btn-primary px-4 py-2 text-sm inline-flex items-center justify-center gap-1 whitespace-nowrap">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" /></svg>
+            Download
           </button>
           <button @click="close" class="btn-secondary px-4 py-2 text-sm">Close</button>
         </div>
@@ -36,22 +36,24 @@
         </div>
 
         <!-- Summary Header -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8 pb-5 border-b">
-          <div class="rounded-lg border border-gray-100 px-5 py-4">
-            <div class="text-xs text-gray-500 uppercase">{{ documentType === 'invoice' ? 'Invoice' : 'Receipt' }} #</div>
-            <div class="font-semibold text-sm text-gray-900 mt-1">{{ payment?.receipt_number || 'N/A' }}</div>
-          </div>
-          <div class="rounded-lg border border-gray-100 px-5 py-4">
-            <div class="text-xs text-gray-500 uppercase">Date</div>
-            <div class="font-semibold text-gray-900 mt-1">{{ formatDate(payment?.payment_date) }}</div>
-          </div>
-          <div class="rounded-lg border border-gray-100 px-5 py-4">
-            <div class="text-xs text-gray-500 uppercase">Bill To</div>
-            <div class="font-semibold text-gray-900 mt-1">{{ payment?.customer?.full_name || 'N/A' }}</div>
-            <div v-if="payment?.customer?.phone || payment?.customer?.phone_number" class="text-sm text-gray-600 mt-1">{{ payment.customer.phone || payment.customer.phone_number }}</div>
-            <div v-else-if="payment?.customer?.email" class="text-sm text-gray-600 mt-1">{{ payment.customer.email }}</div>
-          </div>
-        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid #e5e7eb; table-layout: fixed;">
+          <tr>
+            <td style="width: 33.33%; vertical-align: top; padding: 1rem 1.25rem; border: 1px solid #f3f4f6; border-radius: 0.5rem;">
+              <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase;">{{ documentType === 'invoice' ? 'Invoice' : 'Receipt' }} #</div>
+              <div style="font-weight: 600; font-size: 0.875rem; color: #111827; margin-top: 0.25rem;">{{ payment?.receipt_number || 'N/A' }}</div>
+            </td>
+            <td style="width: 33.33%; vertical-align: top; padding: 1rem 1.25rem; border: 1px solid #f3f4f6; border-radius: 0.5rem;">
+              <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase;">Date</div>
+              <div style="font-weight: 600; color: #111827; margin-top: 0.25rem;">{{ formatDate(payment?.payment_date) }}</div>
+            </td>
+            <td style="width: 33.33%; vertical-align: top; padding: 1rem 1.25rem; border: 1px solid #f3f4f6; border-radius: 0.5rem;">
+              <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase;">Bill To</div>
+              <div style="font-weight: 600; color: #111827; margin-top: 0.25rem;">{{ payment?.customer?.full_name || 'N/A' }}</div>
+              <div v-if="payment?.customer?.phone || payment?.customer?.phone_number" style="font-size: 0.875rem; color: #4b5563; margin-top: 0.25rem;">{{ payment.customer.phone || payment.customer.phone_number }}</div>
+              <div v-else-if="payment?.customer?.email" style="font-size: 0.875rem; color: #4b5563; margin-top: 0.25rem;">{{ payment.customer.email }}</div>
+            </td>
+          </tr>
+        </table>
 
         <!-- Amount Section -->
         <div class="bg-gray-50 rounded-lg p-4 mb-6">
@@ -68,7 +70,7 @@
         </div>
 
         <!-- Details -->
-        <div class="mb-6 flex justify-center">
+        <div class="mb-6">
           <table class="text-sm min-w-[22rem]">
             <tbody>
               <tr v-if="payment?.notes" class="border-b">
@@ -129,7 +131,6 @@ function sendWhatsApp() {
 
 async function downloadAndSend() {
   await downloadPDF();
-  sendWhatsApp();
 }
 
 import { ref } from 'vue';
