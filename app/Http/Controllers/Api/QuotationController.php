@@ -32,7 +32,7 @@ class QuotationController extends Controller
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'status' => 'nullable|in:draft,issued,agreed,revoked',
             'notes' => 'nullable|string|max:2000',
-            'warranty_months' => 'nullable|integer|in:3,6,12',
+            'warranty_months' => 'nullable|integer|in:3,6,12,24,36',
             'validity_days' => 'nullable|integer|in:7,30',
             'discount_amount' => 'nullable|numeric|min:0',
             'discount_reason' => 'nullable|string|max:500',

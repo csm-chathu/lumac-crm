@@ -111,6 +111,8 @@
               <option value="3">3 months warranty</option>
               <option value="6">6 months warranty</option>
               <option value="12">12 months warranty</option>
+              <option value="24">24 months warranty</option>
+              <option value="36">36 months warranty</option>
             </select>
 
             <div class="input-field bg-gray-50 text-gray-500 flex items-center gap-2 cursor-not-allowed select-none">
