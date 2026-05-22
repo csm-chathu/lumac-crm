@@ -93,12 +93,24 @@
 
         <div class="p-5 md:p-6 space-y-5">
           <!-- Customer + Commission (read-only) -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <select v-model="form.customer_id" class="input-field">
               <option value="">Select customer</option>
               <option v-for="customer in customersStore.customers" :key="customer.id" :value="customer.id">
                 {{ customer.full_name }}
               </option>
+            </select>
+
+            <select v-model="form.validity_days" class="input-field">
+              <option value="7">Valid for 7 days</option>
+              <option value="30">Valid for 30 days</option>
+            </select>
+
+            <select v-model="form.warranty_months" class="input-field">
+              <option value="">No warranty</option>
+              <option value="3">3 months warranty</option>
+              <option value="6">6 months warranty</option>
+              <option value="12">12 months warranty</option>
             </select>
 
             <div class="input-field bg-gray-50 text-gray-500 flex items-center gap-2 cursor-not-allowed select-none">
@@ -279,6 +291,8 @@ const isAgent = computed(() => authStore.isAgent);
 
 const form = reactive({
   customer_id: '',
+  validity_days: 30,
+  warranty_months: '',
   discount_rate: isAgent.value ? 0 : 35,
   commission_rate: isAgent.value ? 30 : 10,
 });
@@ -330,6 +344,8 @@ function toCurrency(value) {
 
 function resetQuotationForm() {
   form.customer_id = '';
+  form.validity_days = 30;
+  form.warranty_months = '';
   form.discount_rate = isAgent.value ? 0 : 35;
   form.commission_rate = isAgent.value ? 30 : 10;
   Object.keys(selectedDevices).forEach((key) => delete selectedDevices[key]);
@@ -439,6 +455,8 @@ async function createQuotation() {
 
     const payload = {
       customer_id: Number(form.customer_id),
+      validity_days: Number(form.validity_days) || 30,
+      warranty_months: form.warranty_months ? Number(form.warranty_months) : null,
       discount_rate: isAgent.value ? 0 : Number(form.discount_rate),
       commission_rate: isAgent.value ? 30 : Number(form.commission_rate),
       status: 'issued',

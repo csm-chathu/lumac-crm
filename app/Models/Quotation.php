@@ -20,6 +20,8 @@ class Quotation extends Model
         'commission_amount',
         'status',
         'notes',
+        'warranty_months',
+        'validity_days',
         'issued_at',
         'revoked_at',
     ];

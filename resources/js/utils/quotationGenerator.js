@@ -19,8 +19,9 @@ import html2pdf from 'html2pdf.js';
  * Generate quotation HTML
  */
 export function generateQuotationHTML(quotation, size = 'a4') {
-  const { customer, items, final_total, quote_number, discount_rate } = quotation;
+  const { customer, items, final_total, quote_number, discount_rate, warranty_months, validity_days } = quotation;
   const hasSolutions = items.some((item) => item.solution_id !== null && item.solution_id !== undefined);
+  const warrantyText = warranty_months ? `Hardware items carry a ${warranty_months}-month warranty against manufacturing defects.` : 'Hardware items carry a 12-month warranty against manufacturing defects.';
   
   // Calculate subtotal and totals
   const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
@@ -217,9 +218,10 @@ export function generateQuotationHTML(quotation, size = 'a4') {
         }
 
         .terms h2 {
-          font-size: ${size === 'a5' ? '14px' : '18px'};
-          font-weight: 700;
+          font-size: ${size === 'a5' ? '16px' : '22px'};
+          font-weight: 800;
           margin-bottom: 10px;
+          letter-spacing: 0.3px;
         }
 
         .terms ol {
@@ -293,6 +295,7 @@ export function generateQuotationHTML(quotation, size = 'a4') {
               <div style="font-size: ${fontSize}; line-height: 1.6;">
                 <div style="margin-bottom: 5px;"><strong>Date:</strong> ${currentDate}</div>
                 <div style="margin-bottom: 5px;"><strong>Status:</strong> Issued</div>
+                <div style="margin-bottom: 5px;"><strong>Payment:</strong> Unpaid</div>
               </div>
             </td>
           </tr>
@@ -309,11 +312,11 @@ export function generateQuotationHTML(quotation, size = 'a4') {
           </colgroup>
           <thead>
             <tr>
-              <th style="background-color: #1e40af; color: white; padding: 10px 8px; text-align: left; font-size: ${fontSize};">#</th>
-              <th style="background-color: #1e40af; color: white; padding: 10px 8px; text-align: left; font-size: ${fontSize};">Description</th>
-              <th style="background-color: #1e40af; color: white; padding: 10px 8px; text-align: right; font-size: ${fontSize};">Quantity</th>
-              <th style="background-color: #1e40af; color: white; padding: 10px 8px; text-align: right; font-size: ${fontSize};">Unit Price</th>
-              <th style="background-color: #1e40af; color: white; padding: 10px 8px; text-align: right; font-size: ${fontSize};">Total</th>
+              <th style="background-color: #172554; color: white; padding: 10px 8px; text-align: left; font-size: ${fontSize};">#</th>
+              <th style="background-color: #172554; color: white; padding: 10px 8px; text-align: left; font-size: ${fontSize};">Description</th>
+              <th style="background-color: #172554; color: white; padding: 10px 8px; text-align: right; font-size: ${fontSize};">Quantity</th>
+              <th style="background-color: #172554; color: white; padding: 10px 8px; text-align: right; font-size: ${fontSize};">Unit Price</th>
+              <th style="background-color: #172554; color: white; padding: 10px 8px; text-align: right; font-size: ${fontSize};">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -349,14 +352,15 @@ export function generateQuotationHTML(quotation, size = 'a4') {
           <h2>Terms and Conditions</h2>
           <ol>
             ${hasSolutions ? `<li><strong>Hosting Renewal:</strong> The hosting and domain service is valid for one (1) year. It must be renewed annually to maintain service.</li>` : ''}
-            <li><strong>Validity:</strong> This quotation is valid for 30 days from the date of issue.</li>
-            <li><strong>Warranty:</strong> Hardware items carry a 12-month warranty against manufacturing defects.</li>
+            <li><strong>Validity:</strong> This quotation is valid for ${validity_days || 30} days from the date of issue.</li>
+            <li><strong>Warranty:</strong> ${warrantyText}</li>
           </ol>
         </div>
 
-        <!-- System generated note -->
-        <div style="margin-top: 40px; margin-bottom: 10px; text-align: center; font-size: ${fontSize}; color: #888;">
-          This is a system generated quotation.
+        <!-- Footer note -->
+        <div style="margin-top: 40px; margin-bottom: 10px; text-align: center; border-top: 1px solid #e0e0e0; padding-top: 16px;">
+          <div style="font-size: ${fontSize}; font-weight: 600; color: #333; margin-bottom: 6px;">Thank you for your business! | LUMAC Solutions</div>
+          <div style="font-size: ${fontSize}; color: #666;">For more details about the order, please use reference number: <strong>${quote_number}</strong></div>
         </div>
         </td></tr>
       </table>
@@ -370,16 +374,15 @@ export function generateQuotationHTML(quotation, size = 'a4') {
 /**
  * Generate and download PDF
  */
-export function generateQuotationPDF(quotation, size = 'a4') {
+export async function generateQuotationPDF(quotation, size = 'a4') {
   const filename = `quotation-${quotation.quote_number}.pdf`;
-  return generateQuotationPDFBlob(quotation, size).then((pdfBlob) => {
-    const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
-  });
+  const pdfBlob = await generateQuotationPDFBlob(quotation, size);
+  const url = URL.createObjectURL(pdfBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 /**
