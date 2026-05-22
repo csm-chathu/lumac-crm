@@ -19,13 +19,14 @@ import html2pdf from 'html2pdf.js';
  * Generate quotation HTML
  */
 export function generateQuotationHTML(quotation, size = 'a4') {
-  const { customer, items, final_total, quote_number, discount_rate, warranty_months, validity_days } = quotation;
+  const { customer, items, final_total, quote_number, discount_rate, warranty_months, validity_days, discount_amount, discount_reason } = quotation;
   const hasSolutions = items.some((item) => item.solution_id !== null && item.solution_id !== undefined);
   const warrantyText = warranty_months ? `Hardware items carry a ${warranty_months}-month warranty against manufacturing defects.` : 'Hardware items carry a 12-month warranty against manufacturing defects.';
+  const discountAmt = Number(discount_amount || 0);
   
   // Calculate subtotal and totals
   const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-  const total = Number(final_total ?? subtotal);
+  const total = subtotal - discountAmt;
 
   const pageWidth = size === 'a5' ? '148mm' : '210mm';
   const pageHeight = size === 'a5' ? '210mm' : '297mm';
@@ -324,13 +325,19 @@ export function generateQuotationHTML(quotation, size = 'a4') {
           </tbody>
           <!-- Totals inside table for perfect alignment -->
           <tfoot>
+            ${discountAmt > 0 ? `
             <tr>
               <td colspan="4" style="padding: 8px; border-top: 1px solid #e0e0e0; font-size: ${fontSize}; text-align: right; font-weight: 600;">Subtotal:</td>
               <td style="padding: 8px; border-top: 1px solid #e0e0e0; font-size: ${fontSize}; text-align: right;">LKR ${Number(subtotal).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             </tr>
             <tr>
-              <td colspan="4" style="padding: 10px 8px; border-top: 2px solid #1e40af; font-size: ${size === 'a5' ? '13px' : '16px'}; text-align: right; font-weight: 700; color: #1e40af;">TOTAL:</td>
-              <td style="padding: 10px 8px; border-top: 2px solid #1e40af; font-size: ${size === 'a5' ? '13px' : '16px'}; text-align: right; font-weight: 700; color: #1e40af;">LKR ${Number(total).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td colspan="4" style="padding: 8px; font-size: ${fontSize}; text-align: right; font-weight: 600; color: #dc2626;">Discount${discount_reason ? ` (${discount_reason})` : ''}:</td>
+              <td style="padding: 8px; font-size: ${fontSize}; text-align: right; color: #dc2626;">- LKR ${Number(discountAmt).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            </tr>
+            ` : ''}
+            <tr>
+              <td colspan="4" style="padding: 10px 8px; border-top: 2px solid #172554; font-size: ${size === 'a5' ? '13px' : '16px'}; text-align: right; font-weight: 700; color: #172554;">TOTAL:</td>
+              <td style="padding: 10px 8px; border-top: 2px solid #172554; font-size: ${size === 'a5' ? '13px' : '16px'}; text-align: right; font-weight: 700; color: #172554;">LKR ${Number(total).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             </tr>
           </tfoot>
         </table>
@@ -340,8 +347,8 @@ export function generateQuotationHTML(quotation, size = 'a4') {
         <div class="payment-schedule">
           <div class="payment-schedule-title">Payment Schedule</div>
           <ul>
-            <li><strong>Initial Payment (50%):</strong> LKR ${Number(total / 2).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Payable upon confirmation)</li>
-            <li><strong>Final Payment (50%):</strong> LKR ${Number(total / 2).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Payable after one week of system usage)</li>
+            <li><strong>Initial Payment (50%):</strong> LKR ${Number(total / 2).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style="color:#666;">(Payable upon confirmation)</span></li>
+            <li><strong>Final Payment (50%):</strong> LKR ${Number(total / 2).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style="color:#666;">(Payable after one week of system usage)</span></li>
           </ul>
         </div>
 

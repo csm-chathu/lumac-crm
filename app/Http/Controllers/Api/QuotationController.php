@@ -34,6 +34,8 @@ class QuotationController extends Controller
             'notes' => 'nullable|string|max:2000',
             'warranty_months' => 'nullable|integer|in:3,6,12',
             'validity_days' => 'nullable|integer|in:7,30',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'discount_reason' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
             'items.*.solution_id' => 'nullable|exists:solutions,id',
             'items.*.item_name' => 'nullable|string|max:255',
@@ -69,6 +71,8 @@ class QuotationController extends Controller
                 'notes' => $data['notes'] ?? null,
                 'warranty_months' => $data['warranty_months'] ?? null,
                 'validity_days' => $data['validity_days'] ?? 30,
+                'discount_amount' => $data['discount_amount'] ?? 0,
+                'discount_reason' => $data['discount_reason'] ?? null,
                 'issued_at' => ($data['status'] ?? 'draft') === 'issued' ? now() : null,
             ]);
 

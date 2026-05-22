@@ -200,6 +200,18 @@
             </div>
           </div>
 
+          <!-- Discount -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Discount Amount (LKR)</label>
+              <input v-model="form.discount_amount" type="number" min="0" step="0.01" class="input-field" placeholder="0.00" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Reason for Discount</label>
+              <input v-model="form.discount_reason" type="text" class="input-field" placeholder="e.g. Loyalty discount, Promotional offer..." />
+            </div>
+          </div>
+
           <!-- Actions -->
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
             <p class="text-sm font-semibold text-gray-800">Estimated Total: {{ toCurrency(estimatedTotal) }}</p>
@@ -293,6 +305,8 @@ const form = reactive({
   customer_id: '',
   validity_days: 30,
   warranty_months: '',
+  discount_amount: '',
+  discount_reason: '',
   discount_rate: isAgent.value ? 0 : 35,
   commission_rate: isAgent.value ? 30 : 10,
 });
@@ -331,7 +345,10 @@ const selectedSolutionsTotal = computed(() =>
   )
 );
 
-const estimatedTotal = computed(() => selectedSolutionsTotal.value + selectedDevicesTotal.value);
+const estimatedTotal = computed(() => {
+  const subtotal = selectedSolutionsTotal.value + selectedDevicesTotal.value;
+  return subtotal - (Number(form.discount_amount) || 0);
+});
 
 function resetQuoteFilters() {
   searchQuery.value = '';
@@ -346,6 +363,8 @@ function resetQuotationForm() {
   form.customer_id = '';
   form.validity_days = 30;
   form.warranty_months = '';
+  form.discount_amount = '';
+  form.discount_reason = '';
   form.discount_rate = isAgent.value ? 0 : 35;
   form.commission_rate = isAgent.value ? 30 : 10;
   Object.keys(selectedDevices).forEach((key) => delete selectedDevices[key]);
@@ -457,6 +476,8 @@ async function createQuotation() {
       customer_id: Number(form.customer_id),
       validity_days: Number(form.validity_days) || 30,
       warranty_months: form.warranty_months ? Number(form.warranty_months) : null,
+      discount_amount: form.discount_amount ? Number(form.discount_amount) : 0,
+      discount_reason: form.discount_reason || null,
       discount_rate: isAgent.value ? 0 : Number(form.discount_rate),
       commission_rate: isAgent.value ? 30 : Number(form.commission_rate),
       status: 'issued',
