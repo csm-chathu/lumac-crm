@@ -93,7 +93,7 @@
 
         <div class="p-5 md:p-6 space-y-5">
           <!-- Customer + Commission (read-only) -->
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <select v-model="form.customer_id" class="input-field">
               <option value="">Select customer</option>
               <option v-for="customer in customersStore.customers" :key="customer.id" :value="customer.id">
@@ -115,16 +115,7 @@
               <option value="36">36 months warranty</option>
             </select>
 
-            <div class="input-field bg-gray-50 text-gray-500 flex items-center gap-2 cursor-not-allowed select-none">
-              <svg class="w-4 h-4 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <span class="text-sm">Commission: <strong class="text-gray-700">{{ isAgent ? 30 : form.commission_rate }}%</strong></span>
-              <span class="ml-auto text-xs text-gray-400">Fixed</span>
-            </div>
           </div>
-
-          <p v-if="isAgent" class="text-xs text-gray-500 -mt-2">For agents, commission is fixed at 30% and calculated from solution items only.</p>
 
           <!-- Devices — compact tiles -->
           <div class="space-y-3 border border-gray-100 rounded-xl p-4">
@@ -345,7 +336,6 @@ const form = reactive({
   show_descriptions: true,
   show_terms: true,
   discount_rate: isAgent.value ? 0 : 35,
-  commission_rate: isAgent.value ? 30 : 10,
 });
 
 const filteredQuotations = computed(() => {
@@ -405,7 +395,6 @@ function resetQuotationForm() {
   form.show_descriptions = true;
   form.show_terms = true;
   form.discount_rate = isAgent.value ? 0 : 35;
-  form.commission_rate = isAgent.value ? 30 : 10;
   Object.keys(selectedDevices).forEach((key) => delete selectedDevices[key]);
   Object.keys(selectedSolutions).forEach((key) => delete selectedSolutions[key]);
 }
@@ -520,7 +509,7 @@ async function createQuotation() {
       discount_amount: form.discount_amount ? Number(form.discount_amount) : 0,
       discount_reason: form.discount_reason || null,
       discount_rate: isAgent.value ? 0 : Number(form.discount_rate),
-      commission_rate: isAgent.value ? 30 : Number(form.commission_rate),
+      commission_rate: 0,
       status: 'issued',
       items: [...solutionItems, ...deviceItems],
     };

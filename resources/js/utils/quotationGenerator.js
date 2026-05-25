@@ -358,7 +358,7 @@ export function generateQuotationHTML(quotation, size = 'a4') {
         ` : ''}
 
         <!-- Terms and Conditions -->
-        ${!show_terms ? '' : `
+        ${show_terms == false ? '' : `
         <div class="terms">
           <h2>Terms and Conditions</h2>
           <ol>

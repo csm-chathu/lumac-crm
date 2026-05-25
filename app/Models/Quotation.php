@@ -35,6 +35,7 @@ class Quotation extends Model
         'final_total' => 'decimal:2',
         'commission_rate' => 'decimal:2',
         'commission_amount' => 'decimal:2',
+        'show_terms' => 'boolean',
         'issued_at' => 'datetime',
         'revoked_at' => 'datetime',
     ];

@@ -359,10 +359,6 @@
               <p class="text-gray-500">Discount Rate</p>
               <p class="font-medium text-gray-800 mt-0.5">{{ viewingQuote.discount_rate }}%</p>
             </div>
-            <div>
-              <p class="text-gray-500">Commission Rate</p>
-              <p class="font-medium text-gray-800 mt-0.5">{{ viewingQuote.commission_rate }}%</p>
-            </div>
           </div>
 
           <!-- Items -->
@@ -397,17 +393,9 @@
               <span>Subtotal</span>
               <span>{{ toCurrency(viewingQuote.subtotal) }}</span>
             </div>
-            <div class="flex justify-between text-gray-600">
-              <span>Discount ({{ viewingQuote.discount_rate }}%)</span>
-              <span>-{{ toCurrency(viewingQuote.subtotal - viewingQuote.final_total) }}</span>
-            </div>
             <div class="flex justify-between font-bold text-gray-900 text-base pt-1">
-              <span>Final Total</span>
-              <span>{{ toCurrency(viewingQuote.final_total) }}</span>
-            </div>
-            <div class="flex justify-between text-gray-500 text-xs pt-1">
-              <span>Commission ({{ viewingQuote.commission_rate }}%)</span>
-              <span>{{ toCurrency(viewingQuote.commission_amount) }}</span>
+              <span>Total</span>
+              <span>{{ toCurrency(viewingQuote.subtotal) }}</span>
             </div>
           </div>
 
@@ -436,11 +424,6 @@
           <div>
             <label class="text-sm font-medium text-gray-700">Discount Rate (%)</label>
             <input v-model.number="quoteForm.discount_rate" type="number" min="0" max="100" step="0.01" class="input-field mt-1" placeholder="e.g., 35" />
-          </div>
-
-          <div>
-            <label class="text-sm font-medium text-gray-700">Commission Rate (%)</label>
-            <input v-model.number="quoteForm.commission_rate" type="number" min="0" max="100" step="0.01" class="input-field mt-1" placeholder="e.g., 10" />
           </div>
 
           <div>
@@ -483,7 +466,6 @@ const paymentAttachmentInput = ref(null);
 const receiptModal = ref(null);
 const quoteForm = reactive({
   discount_rate: 35,
-  commission_rate: 10,
 });
 const paymentForm = reactive({
   amount: '',
@@ -684,7 +666,6 @@ function openQuoteModal() {
 function closeQuoteModal() {
   showQuoteModal.value = false;
   quoteForm.discount_rate = 35;
-  quoteForm.commission_rate = 10;
 }
 
 async function createQuoteForCustomer() {
@@ -693,7 +674,7 @@ async function createQuoteForCustomer() {
     const payload = {
       customer_id: customer.value.id,
       discount_rate: Number(quoteForm.discount_rate),
-      commission_rate: Number(quoteForm.commission_rate),
+      commission_rate: 0,
       status: 'issued',
       items: [], // Empty items; user can add them on Quotations page
     };
