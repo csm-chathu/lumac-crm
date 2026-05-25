@@ -22,6 +22,7 @@ class Quotation extends Model
         'notes',
         'warranty_months',
         'validity_days',
+        'show_terms',
         'discount_amount',
         'discount_reason',
         'issued_at',

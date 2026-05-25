@@ -13,6 +13,7 @@ class QuotationItem extends Model
         'quotation_id',
         'solution_id',
         'item_name',
+        'description',
         'quantity',
         'unit_price',
         'line_total',

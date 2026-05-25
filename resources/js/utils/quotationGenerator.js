@@ -19,7 +19,7 @@ import html2pdf from 'html2pdf.js';
  * Generate quotation HTML
  */
 export function generateQuotationHTML(quotation, size = 'a4') {
-  const { customer, items, final_total, quote_number, discount_rate, warranty_months, validity_days, discount_amount, discount_reason } = quotation;
+  const { customer, items, final_total, quote_number, discount_rate, warranty_months, validity_days, discount_amount, discount_reason, show_terms } = quotation;
   const hasSolutions = items.some((item) => item.solution_id !== null && item.solution_id !== undefined);
   const warrantyText = warranty_months ? `Hardware items carry a ${warranty_months}-month warranty against manufacturing defects.` : 'Hardware items carry a 12-month warranty against manufacturing defects.';
   const discountAmt = Number(discount_amount || 0);
@@ -37,7 +37,10 @@ export function generateQuotationHTML(quotation, size = 'a4') {
   const itemsHTML = items.map((item, idx) => `
     <tr>
       <td style="${tdBase}">${idx + 1}</td>
-      <td style="${tdBase}">${item.item_name || 'Item'}</td>
+      <td style="${tdBase}">
+        <div>${item.item_name || 'Item'}</div>
+        ${item.description ? `<div style="font-size: ${size === 'a5' ? '9px' : '11px'}; color: #666; margin-top: 2px; line-height: 1.6;">${item.description.replace(/\n/g, '<br>')}</div>` : ''}
+      </td>
       <td style="${tdBase} text-align: right;">${item.quantity}</td>
       <td style="${tdBase} text-align: right;">LKR ${Number(item.unit_price || 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
       <td style="${tdBase} text-align: right;">LKR ${Number(item.quantity * item.unit_price || 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -354,7 +357,8 @@ export function generateQuotationHTML(quotation, size = 'a4') {
 
         ` : ''}
 
-        <!-- Terms and Conditions (always shown) -->
+        <!-- Terms and Conditions -->
+        ${!show_terms ? '' : `
         <div class="terms">
           <h2>Terms and Conditions</h2>
           <ol>
@@ -363,6 +367,7 @@ export function generateQuotationHTML(quotation, size = 'a4') {
             <li><strong>Warranty:</strong> ${warrantyText}</li>
           </ol>
         </div>
+        `}
 
         <!-- Footer note -->
         <div style="margin-top: 40px; margin-bottom: 10px; text-align: center; border-top: 1px solid #e0e0e0; padding-top: 16px;">

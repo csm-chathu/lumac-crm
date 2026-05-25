@@ -202,6 +202,39 @@
             </div>
           </div>
 
+          <!-- Options -->
+          <div class="flex flex-wrap items-center gap-5">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <button
+                type="button"
+                class="relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
+                :class="form.show_descriptions ? 'bg-primary-600' : 'bg-gray-300'"
+                @click="form.show_descriptions = !form.show_descriptions"
+              >
+                <span
+                  class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200"
+                  :class="form.show_descriptions ? 'translate-x-4' : 'translate-x-0'"
+                ></span>
+              </button>
+              <span class="text-sm text-gray-700">Show device descriptions</span>
+            </label>
+
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <button
+                type="button"
+                class="relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
+                :class="form.show_terms ? 'bg-primary-600' : 'bg-gray-300'"
+                @click="form.show_terms = !form.show_terms"
+              >
+                <span
+                  class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200"
+                  :class="form.show_terms ? 'translate-x-4' : 'translate-x-0'"
+                ></span>
+              </button>
+              <span class="text-sm text-gray-700">Show terms & conditions</span>
+            </label>
+          </div>
+
           <!-- Discount -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -309,6 +342,8 @@ const form = reactive({
   warranty_months: '',
   discount_amount: '',
   discount_reason: '',
+  show_descriptions: true,
+  show_terms: true,
   discount_rate: isAgent.value ? 0 : 35,
   commission_rate: isAgent.value ? 30 : 10,
 });
@@ -367,6 +402,8 @@ function resetQuotationForm() {
   form.warranty_months = '';
   form.discount_amount = '';
   form.discount_reason = '';
+  form.show_descriptions = true;
+  form.show_terms = true;
   form.discount_rate = isAgent.value ? 0 : 35;
   form.commission_rate = isAgent.value ? 30 : 10;
   Object.keys(selectedDevices).forEach((key) => delete selectedDevices[key]);
@@ -470,6 +507,7 @@ async function createQuotation() {
     const deviceItems = Object.values(selectedDevices).map(({ device, quantity }) => ({
       solution_id: null,
       item_name: device.model ? `${device.name} (${device.model})` : device.name,
+      description: form.show_descriptions ? (device.description || null) : null,
       quantity,
       unit_price: Number(device.selling_price || 0),
     }));
@@ -477,6 +515,7 @@ async function createQuotation() {
     const payload = {
       customer_id: Number(form.customer_id),
       validity_days: Number(form.validity_days) || 30,
+      show_terms: form.show_terms,
       warranty_months: form.warranty_months ? Number(form.warranty_months) : null,
       discount_amount: form.discount_amount ? Number(form.discount_amount) : 0,
       discount_reason: form.discount_reason || null,

@@ -23,6 +23,7 @@ class DeviceController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'model' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:2000',
             'purchase_price' => 'required|numeric',
             'selling_price' => 'required|numeric',
             'image_url' => 'nullable|string|url',
@@ -40,6 +41,7 @@ class DeviceController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'model' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:2000',
             'purchase_price' => 'required|numeric',
             'selling_price' => 'required|numeric',
             'image_url' => 'nullable|string|url',

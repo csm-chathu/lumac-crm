@@ -12,6 +12,7 @@ class Device extends Model
     protected $fillable = [
         'name',
         'model',
+        'description',
         'purchase_price',
         'selling_price',
         'image_url',

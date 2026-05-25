@@ -32,10 +32,12 @@
         <div class="p-5 space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input v-model="form.name" class="input-field" placeholder="Device name (e.g., Printer, Barcode Scanner)" />
-            <input v-model="form.model" class="input-field" placeholder="Model/Description" />
+            <input v-model="form.model" class="input-field" placeholder="Model" />
             <input v-model.number="form.purchase_price" type="number" min="0" step="0.01" class="input-field" placeholder="Purchase price" />
             <input v-model.number="form.selling_price" type="number" min="0" step="0.01" class="input-field" placeholder="Selling price" />
           </div>
+
+          <textarea v-model="form.description" class="input-field w-full" rows="3" placeholder="Description (optional)"></textarea>
 
           <div class="space-y-2 border border-gray-100 rounded-lg p-4">
             <label class="block text-sm font-semibold text-gray-800">Device Image</label>
@@ -203,10 +205,12 @@
         <div class="p-5 space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input v-model="editForm.name" class="input-field" placeholder="Device name (e.g., Printer, Barcode Scanner)" />
-            <input v-model="editForm.model" class="input-field" placeholder="Model/Description" />
+            <input v-model="editForm.model" class="input-field" placeholder="Model" />
             <input v-model.number="editForm.purchase_price" type="number" min="0" step="0.01" class="input-field" placeholder="Purchase price" />
             <input v-model.number="editForm.selling_price" type="number" min="0" step="0.01" class="input-field" placeholder="Selling price" />
           </div>
+
+          <textarea v-model="editForm.description" class="input-field w-full" rows="3" placeholder="Description (optional)"></textarea>
 
           <div class="space-y-2 border border-gray-100 rounded-lg p-4">
             <label class="block text-sm font-semibold text-gray-800">Device Image</label>
@@ -248,6 +252,7 @@
         </div>
         <div class="bg-gray-50 px-5 py-4 border-t border-gray-100 space-y-2">
           <p class="text-sm"><strong>Model:</strong> {{ selectedDevice.model }}</p>
+          <p v-if="selectedDevice.description" class="text-sm" style="white-space: pre-line;"><strong>Description:</strong><br>{{ selectedDevice.description }}</p>
           <p class="text-sm"><strong>Purchase:</strong> {{ toCurrency(selectedDevice.purchase_price) }}</p>
           <p class="text-sm"><strong>Selling:</strong> {{ toCurrency(selectedDevice.selling_price) }}</p>
         </div>
@@ -264,6 +269,7 @@
           </div>
           <div class="font-medium text-gray-800">Name: {{ device.name }}</div>
           <div class="text-gray-500 text-sm">Model: {{ device.model }}</div>
+          <div v-if="device.description" class="text-gray-500 text-sm mt-1" style="white-space: pre-line;">{{ device.description }}</div>
           <div class="text-gray-500 text-sm">Purchase: {{ toCurrency(device.purchase_price) }}</div>
           <div class="text-gray-500 text-sm">Selling: {{ toCurrency(device.selling_price) }}</div>
           <div v-if="canManage" class="mt-3 flex gap-2">
@@ -297,6 +303,7 @@ const showCropModal = ref(false);
 const form = reactive({
   name: '',
   model: '',
+  description: '',
   purchase_price: '',
   selling_price: '',
   image_url: '',
@@ -326,6 +333,7 @@ const editId = ref(null);
 const editForm = reactive({
   name: '',
   model: '',
+  description: '',
   purchase_price: '',
   selling_price: '',
   image_url: '',
@@ -335,6 +343,7 @@ function startEdit(device) {
   editId.value = device.id;
   editForm.name = device.name;
   editForm.model = device.model;
+  editForm.description = device.description || '';
   editForm.purchase_price = device.purchase_price;
   editForm.selling_price = device.selling_price;
   editForm.image_url = device.image_url || '';
@@ -358,6 +367,7 @@ async function updateDevice(id) {
     await axios.put(`/devices/${id}`, {
       name: editForm.name,
       model: editForm.model,
+      description: editForm.description || null,
       purchase_price: editForm.purchase_price,
       selling_price: editForm.selling_price,
       image_url: editForm.image_url || null,
@@ -664,6 +674,7 @@ function resetAddForm() {
   revokeBlobUrl(form.image_url);
   form.name = '';
   form.model = '';
+  form.description = '';
   form.purchase_price = '';
   form.selling_price = '';
   form.image_url = '';
@@ -711,6 +722,7 @@ async function addDevice() {
     await axios.post('/devices', {
       name: form.name,
       model: form.model,
+      description: form.description || null,
       purchase_price: form.purchase_price,
       selling_price: form.selling_price,
       image_url: imageUrl,
